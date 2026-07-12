@@ -28,23 +28,24 @@ button { font-family: inherit; }
 }
 
 /* ———— 首页 ———— */
-.home { align-items: center; justify-content: center; gap: 14px; padding: 22px; }
+.home { align-items: center; justify-content: flex-start; gap: 10px; padding: 18px 20px; overflow-y: auto; }
 .title-wrap { text-align: center; }
-.mascot { font-size: 62px; animation: floaty 2.4s ease-in-out infinite; }
-.home h1 { font-size: 44px; color: #EC4899; letter-spacing: 3px; text-shadow: 0 3px 0 #fff, 0 8px 18px rgba(236, 72, 153, .3); }
-.tagline { font-size: 13px; color: #A6789F; font-weight: 600; margin-top: 6px; }
-.rules { padding: 13px 16px; font-size: 12.5px; line-height: 1.8; color: #7A5A85; width: 100%; }
+.mascot { font-size: 52px; animation: floaty 2.4s ease-in-out infinite; }
+.home h1 { font-size: 40px; color: #EC4899; letter-spacing: 3px; text-shadow: 0 3px 0 #fff, 0 8px 18px rgba(236, 72, 153, .3); }
+.tagline { font-size: 12.5px; color: #A6789F; font-weight: 600; margin-top: 5px; }
+.rules { padding: 11px 14px; font-size: 12px; line-height: 1.75; color: #7A5A85; width: 100%; }
 .rules b { color: #DB2777; }
-.lv-card { display: flex; align-items: center; gap: 12px; padding: 15px 16px; width: 100%; cursor: pointer; text-align: left; transition: transform .15s ease-out; }
+.lv-card { display: flex; align-items: center; gap: 12px; padding: 11px 14px; width: 100%; flex-shrink: 0; cursor: pointer; text-align: left; transition: transform .15s ease-out; }
 .lv-card:hover { transform: translateY(-2px); }
 .lv-card:active { transform: translateY(2px); }
 .lv-card.locked { filter: grayscale(.65) opacity(.8); }
-.lv-emoji { font-size: 34px; }
+.lv-emoji { font-size: 28px; }
 .lv-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
 .lv-info b { font-size: 15.5px; color: #59306B; }
 .lv-info small { font-size: 11.5px; color: #AD87B8; }
 .lv-rate { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
 .lv-rate.easy { background: #D1FAE5; color: #059669; }
+.lv-rate.mid { background: #FEF3C7; color: #B45309; }
 .lv-rate.hard { background: #FFE4E6; color: #E11D48; }
 .foot { font-size: 10.5px; color: #BB9DC6; text-align: center; }
 
@@ -59,10 +60,17 @@ button { font-family: inherit; }
 .progress-fill { height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #F9A8D4, #F472B6); transition: width .35s ease-out; }
 .progress-num { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: 800; color: #BE185D; }
 
+.dishbar { display: flex; align-items: center; gap: 6px; margin: 5px 16px 0; min-height: 24px; background: rgba(255,255,255,.55); border-radius: 12px; padding: 3px 10px; }
+.dish-label { font-size: 10.5px; font-weight: 800; color: #B45309; white-space: nowrap; }
+.dish-list { font-size: 15px; letter-spacing: 2px; color: #C9A8D4; overflow: hidden; white-space: nowrap; }
+.dish-list b { font-size: 11px; color: #B45309; }
+.ghost-dish { position: fixed; z-index: 992; font-size: 32px; pointer-events: none; transition: transform .42s cubic-bezier(.4, .9, .4, 1), opacity .42s; filter: drop-shadow(0 4px 8px rgba(180, 83, 9, .4)); }
+
 .board-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 4px; }
 .board { position: relative; }
 .linksvg { position: absolute; inset: 0; z-index: 900; pointer-events: none; overflow: visible; }
 .linkline { fill: none; stroke: #F472B6; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 9 7; filter: drop-shadow(0 2px 3px rgba(236, 72, 153, .45)); animation: dash .4s linear; }
+.linkline.recipe { stroke: #34D399; filter: drop-shadow(0 2px 3px rgba(16, 185, 129, .5)); }
 @keyframes dash { from { stroke-dashoffset: 64; opacity: .4; } to { stroke-dashoffset: 0; opacity: 1; } }
 
 .tile {
@@ -79,6 +87,7 @@ button { font-family: inherit; }
 .tile:not(.covered):active { transform: translateY(1px) scale(.97); }
 .tile.sel { transform: translateY(-4px) scale(1.1); z-index: 880 !important; box-shadow: 0 0 0 3px #F472B6, 0 8px 16px rgba(236, 72, 153, .35); animation: selBounce .45s ease-out; }
 .tile.glow { animation: glowPulse .9s ease-in-out infinite; box-shadow: 0 0 0 3px #FCD34D, 0 4px 12px rgba(245, 158, 11, .55); }
+.tile.glow2 { animation: glowPulse .9s ease-in-out infinite; box-shadow: 0 0 0 3px #34D399, 0 4px 12px rgba(16, 185, 129, .55); }
 .tile.zap { animation: zapPop .38s ease-out forwards; z-index: 890 !important; }
 @keyframes zapPop { 40% { transform: scale(1.28); opacity: 1; } 100% { transform: scale(.1) rotate(24deg); opacity: 0; } }
 @keyframes glowPulse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px) scale(1.05); } }

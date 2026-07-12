@@ -1,11 +1,11 @@
-// 「连了个连」界面层:渲染 + 交互 + 动效 + 音效
-import { buildLevel, LEVELS, EMOJIS, mulberry32 } from './engine.js';
+// 「炒了个菜」界面层:渲染 + 交互 + 动效 + 音效
+import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
 const app = document.getElementById('app');
 
 const store = {
-  get(k, d) { try { const v = localStorage.getItem('llgl.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
-  set(k, v) { try { localStorage.setItem('llgl.' + k, JSON.stringify(v)); } catch { /* 隐私模式等 */ } },
+  get(k, d) { try { const v = localStorage.getItem('clgc.' + k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('clgc.' + k, JSON.stringify(v)); } catch { /* 隐私模式等 */ } },
 };
 
 // ———— 音效:WebAudio 现场合成,零外部资源 ————
@@ -33,6 +33,7 @@ const sfx = {
   slot() { tone(430, .09, 'sine', .1); tone(320, .1, 'sine', .05, .04); },
   link() { tone(784, .09, 'triangle', .1); tone(1175, .12, 'triangle', .09, .06); },
   pair() { tone(880, .1, 'triangle', .1); tone(1319, .14, 'triangle', .09, .07); },
+  dish() { [659, 880, 1319, 1760].forEach((f, i) => tone(f, .12, 'triangle', .11, i * .07)); },
   deny() { tone(180, .08, 'square', .05); },
   lose() { [392, 330, 262, 196].forEach((f, i) => tone(f, .18, 'sawtooth', .06, i * .13)); },
   win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .09)); },
@@ -40,6 +41,7 @@ const sfx = {
 
 const TINTS = ['#FFE3EC', '#FFF1D6', '#E3F4FF', '#E8F9E3', '#F3E8FF', '#FFFAD6', '#DFF6F0', '#FFE9DF', '#EBEBFF', '#FFEFF7'];
 const tint = t => TINTS[t.type % TINTS.length];
+const EMO = t => INGREDIENTS[t.type].e;
 
 const ICONS = {
   back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>',
@@ -50,13 +52,23 @@ const ICONS = {
   pop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M7 8l5-5 5 5"/><path d="M4 15v3a3 3 0 003 3h10a3 3 0 003-3v-3"/></svg>',
 };
 
+const LEVEL_META = {
+  1: { icon: '🥚', rate: '通过率 99%', cls: 'easy', blurb: '30 秒开火热灶' },
+  2: { icon: '🔪', rate: '≈65%', cls: 'easy', blurb: '刀工渐稳,五层小塔' },
+  3: { icon: '🥘', rate: '≈15%', cls: 'mid', blurb: '散装食材多起来了' },
+  4: { icon: '🌶️', rate: '≈4%', cls: 'hard', blurb: '地狱后厨,盲堆七层' },
+  5: { icon: '👑', rate: '<1%', cls: 'hard', blurb: '四角盲堆,28 种食材' },
+};
+
 const LOSE_LINES = [
-  '这关实测通过率 ≈2%,输了不丢人',
-  '就……再来亿次?',
-  '撤回、洗牌、弹出,三个道具真的不用吗?',
-  '牌堆在偷笑,你忍吗?',
-  '差一点点了,下次一定!',
+  '后厨爆单,备菜槽全满了…',
+  '这关实测通过率是个位数,不丢人',
+  '道具真的不用吗,大厨?',
+  '灶台在偷笑,你忍吗?',
+  '差一点点,回锅重造!',
 ];
+
+const TOOL_NAMES = { undo: '撤回', shuffle: '洗牌', pop: '弹出' };
 
 let game = null;
 let levelId = 1;
@@ -68,6 +80,7 @@ let tileEls = new Map();
 let boardEl = null, svgEl = null, slotCellEls = [];
 let hintTimer = null;
 let busy = false; // 入槽飞行动画期间锁输入,避免连点竞态
+let rewardedDishes = 0; // 已发过奖励的出菜数(每 3 道奖 1 个道具)
 const tutDone = {};
 const toolRng = mulberry32((Date.now() % 2147483647) || 1);
 
@@ -75,38 +88,36 @@ const toolRng = mulberry32((Date.now() % 2147483647) || 1);
 function showHome() {
   game = null;
   window.__game = null;
-  const unlocked = store.get('unlock2', false);
-  const attempts = store.get('attempts2', 0);
-  const wins2 = store.get('wins2', 0);
-  const sub2 = unlocked
-    ? (wins2 ? `已通关 ${wins2} 次,大佬!` : (attempts ? `已阵亡 ${attempts} 次` : '有本事就来'))
-    : '先通过第 1 关解锁';
+  const maxLv = store.get('maxLv', 1);
+  const att = store.get('att', {});
+  const cards = [1, 2, 3, 4, 5].map(lv => {
+    const m = LEVEL_META[lv];
+    const locked = lv > maxLv;
+    const sub = locked ? `通过第 ${lv - 1} 关解锁` : (att[lv] ? `${m.blurb} · 已阵亡 ${att[lv]} 次` : m.blurb);
+    return `<button class="lv-card clay ${locked ? 'locked' : ''}" data-lv="${lv}">
+      <span class="lv-emoji">${locked ? '🔒' : m.icon}</span>
+      <span class="lv-info"><b>${LEVELS[lv].name}</b><small>${sub}</small></span>
+      <span class="lv-rate ${m.cls}">${m.rate}</span>
+    </button>`;
+  }).join('');
   app.innerHTML = `
   <div class="screen home">
     <div class="title-wrap">
-      <div class="mascot">🐰</div>
-      <h1>连了个连</h1>
-      <p class="tagline">连连看 × 消消乐 · 可爱但不讲武德</p>
+      <div class="mascot">🍳</div>
+      <h1>炒了个菜</h1>
+      <p class="tagline">连连看 × 菜谱合成 · 可爱但不讲武德</p>
     </div>
     <div class="rules clay">
-      <p>✨ 点两张<b>相同</b>且两折以内<b>连得通</b>的牌,直接消除(会发光提示)</p>
-      <p>🧺 连不到的牌点一下进底部卡槽,同类<b>凑一对</b>即消;塞满 <b>7 格</b>就输啦</p>
+      <p>✨ 两张<b>相同</b>食材两折以内连得通,直接消除(金光提示)</p>
+      <p>🍳 <b>菜谱搭子</b>(绿光)连到一起会合成新菜:鸡蛋+米饭=蛋炒饭!每出 3 道菜送 1 个道具</p>
+      <p>🧺 连不到就点进备菜槽,同款或搭子相遇即消;塞满 <b>7 格</b>就输啦</p>
     </div>
-    <button class="lv-card clay" data-lv="1">
-      <span class="lv-emoji">🌱</span>
-      <span class="lv-info"><b>第 1 关 · 热热身</b><small>30 秒轻松拿捏</small></span>
-      <span class="lv-rate easy">通过率 99%</span>
-    </button>
-    <button class="lv-card clay ${unlocked ? '' : 'locked'}" data-lv="2">
-      <span class="lv-emoji">${unlocked ? '🌋' : '🔒'}</span>
-      <span class="lv-info"><b>第 2 关 · 传说中的地狱</b><small>${sub2}</small></span>
-      <span class="lv-rate hard">通过率 ≈2%</span>
-    </button>
-    <p class="foot">难度经 300×70 局机器人实测校准,每一局都保证有解 🫡</p>
+    ${cards}
+    <p class="foot">难度经数万局机器人实测校准,每一局都保证有解 🫡</p>
   </div>`;
   app.querySelectorAll('.lv-card').forEach(b => b.addEventListener('click', () => {
     const lv = +b.dataset.lv;
-    if (lv === 2 && !store.get('unlock2', false)) {
+    if (lv > store.get('maxLv', 1)) {
       b.classList.add('wobble');
       setTimeout(() => b.classList.remove('wobble'), 450);
       sfx.deny();
@@ -127,12 +138,15 @@ function startLevel(lv) {
   tools = { undo: 1, shuffle: 1, pop: 1 };
   selected = null;
   busy = false;
+  rewardedDishes = 0;
   startTime = Date.now();
-  if (lv === 2) store.set('attempts2', store.get('attempts2', 0) + 1);
+  const att = store.get('att', {});
+  att[lv] = (att[lv] || 0) + 1;
+  store.set('att', att);
   renderPlay();
   if (lv === 1 && !tutDone.start) {
     tutDone.start = 1;
-    hint('👆 点一张牌,能连上的同伴会发光,点发光的那张直接消除!', 6500);
+    hint('👆 点一张食材:同款发金光,菜谱搭子发绿光,点发光的那张就能消!', 7000);
   }
 }
 
@@ -145,6 +159,7 @@ function renderPlay() {
       <button class="icon-btn" id="btn-mute" aria-label="切换声音">${muted ? ICONS.mutedIcon : ICONS.sound}</button>
     </div>
     <div class="progress"><div class="progress-fill"></div><span class="progress-num"></span></div>
+    <div class="dishbar"><span class="dish-label">🍽️ 出品</span><span class="dish-list">—</span></div>
     <div class="board-wrap"><div class="board"><svg class="linksvg"></svg></div></div>
     <div class="tools">
       <button class="tool" data-tool="undo">${ICONS.undo}<span>撤回</span><i class="badge"></i></button>
@@ -193,8 +208,8 @@ function buildTiles() {
     const el = document.createElement('button');
     el.className = 'tile';
     el.style.background = tint(t);
-    el.innerHTML = `<span class="face">${EMOJIS[t.type]}</span>`;
-    el.setAttribute('aria-label', EMOJIS[t.type]);
+    el.innerHTML = `<span class="face">${EMO(t)}</span>`;
+    el.setAttribute('aria-label', INGREDIENTS[t.type].name);
     el.addEventListener('click', () => onTileClick(t));
     boardEl.appendChild(el);
     tileEls.set(t.id, el);
@@ -204,10 +219,12 @@ function buildTiles() {
 // ———————————— 渲染 ————————————
 function refresh() {
   if (!game) return;
-  const glowIds = new Set();
+  const glowGold = new Set(), glowGreen = new Set();
   if (selected && (selected.state !== 'board' || !game.isFree(selected))) selected = null;
   if (selected && game.status === 'playing') {
-    game.linkablePartners(selected).forEach(p => glowIds.add(p.id));
+    for (const p of game.linkablePartners(selected)) {
+      (p.type === selected.type ? glowGold : glowGreen).add(p.id);
+    }
   }
   const size = cell * 2 - 3;
   for (const t of game.tiles) {
@@ -221,23 +238,29 @@ function refresh() {
     el.style.zIndex = t.layer * 100 + t.y;
     const face = el.querySelector('.face');
     face.style.fontSize = Math.round(cell * 1.05) + 'px';
-    if (face.textContent !== EMOJIS[t.type]) { // 洗牌/撤回后牌型会变,牌面要跟着换
-      face.textContent = EMOJIS[t.type];
+    if (face.textContent !== EMO(t)) { // 洗牌/撤回后牌型会变,牌面要跟着换
+      face.textContent = EMO(t);
       el.style.background = tint(t);
-      el.setAttribute('aria-label', EMOJIS[t.type]);
+      el.setAttribute('aria-label', INGREDIENTS[t.type].name);
     }
     el.classList.toggle('covered', !game.isFree(t));
     el.classList.toggle('sel', selected === t);
-    el.classList.toggle('glow', glowIds.has(t.id));
+    el.classList.toggle('glow', glowGold.has(t.id));
+    el.classList.toggle('glow2', glowGreen.has(t.id));
   }
-  // 卡槽
+  // 备菜槽
   app.querySelector('.slotbar').classList.toggle('danger', game.slot.length >= game.slotCap - 1 && game.status === 'playing');
   slotCellEls.forEach((c, i) => {
     const id = game.slot[i];
     if (id === undefined) { c.innerHTML = ''; return; }
     const t = game.tiles[id];
-    c.innerHTML = `<div class="slot-tile" style="background:${tint(t)}">${EMOJIS[t.type]}</div>`;
+    c.innerHTML = `<div class="slot-tile" style="background:${tint(t)}">${EMO(t)}</div>`;
   });
+  // 出品栏
+  const dishes = game.dishes;
+  app.querySelector('.dish-list').innerHTML = dishes.length
+    ? dishes.slice(-12).map(i => `<span>${RECIPES[i].e}</span>`).join('') + (dishes.length > 12 ? ` <b>×${dishes.length}</b>` : '')
+    : '—';
   // 进度
   const done = game.clearedCount();
   app.querySelector('.progress-fill').style.width = (done / game.total * 100) + '%';
@@ -257,10 +280,10 @@ function onTileClick(t) {
   const el = tileEls.get(t.id);
   if (!game.isFree(t)) { wobble(el); sfx.deny(); return; }
   if (selected === t) { selected = null; slotMove(t); return; } // 再点一下自己 → 入槽
-  if (selected && selected.type === t.type) {
+  if (selected) {
     const a = selected;
-    const path = game.link(a, t);
-    if (path) { selected = null; animateLink(a, t, path); return; }
+    const res = game.link(a, t);
+    if (res) { selected = null; animateLink(a, t, res); return; }
   }
   // 选中 / 切换选中;没有可连的同伴就直接入槽
   const partners = game.linkablePartners(t);
@@ -270,19 +293,21 @@ function onTileClick(t) {
   refresh();
 }
 
-function animateLink(a, b, path) {
+function animateLink(a, b, res) {
   sfx.link();
-  const pts = path.map(([x, y]) => `${px(x) + cell / 2},${py(y) + cell / 2}`).join(' ');
-  svgEl.innerHTML = `<polyline class="linkline" points="${pts}"/>`;
+  const pts = res.path.map(([x, y]) => `${px(x) + cell / 2},${py(y) + cell / 2}`).join(' ');
+  svgEl.innerHTML = `<polyline class="linkline ${res.recipe !== null ? 'recipe' : ''}" points="${pts}"/>`;
   for (const t of [a, b]) {
     const el = tileEls.get(t.id);
     el.classList.add('zap');
     burstAt(el.getBoundingClientRect());
   }
-  tut('link', '漂亮!连不到的牌点一下会落进卡槽,同类凑一对也会消~');
+  tut('link', '漂亮!连不到的食材点一下会落进备菜槽,同款或搭子在槽里相遇也会消~');
+  const bRect = tileEls.get(b.id).getBoundingClientRect();
   setTimeout(() => {
     svgEl.innerHTML = '';
     [a, b].forEach(t => tileEls.get(t.id).classList.remove('zap'));
+    if (res.recipe !== null) onDish(res.recipe, bRect);
     refresh();
     checkEnd();
   }, 380);
@@ -301,18 +326,55 @@ function slotMove(t) {
   fly(from, to, t, () => {
     busy = false;
     if (res.paired) { sfx.pair(); burstAt(to); } else { sfx.slot(); }
+    if (res.recipe !== null) onDish(res.recipe, to);
     refresh();
-    if (res.paired) tut('pair', '同类在卡槽里凑成一对,自动消除,槽位不亏!');
-    else tut('slot', '卡槽只有 7 格,塞满就输咯,且行且珍惜 🧐');
+    if (res.paired) { if (res.recipe === null) tut('pair', '同款在备菜槽相遇,自动消除,槽位不亏!'); }
+    else tut('slot', '备菜槽只有 7 格,塞满就输咯,且行且珍惜 🧐');
     checkEnd();
   });
+}
+
+// 出菜:菜品飞向出品栏 + 提示 + 每 3 道奖励一个道具
+function onDish(recipeIdx, fromRect) {
+  const r = RECIPES[recipeIdx];
+  sfx.dish();
+  const bar = app.querySelector('.dishbar');
+  if (bar) {
+    const to = bar.getBoundingClientRect();
+    const g = document.createElement('div');
+    g.className = 'ghost-dish';
+    g.textContent = r.e;
+    g.style.cssText = `left:${fromRect.left + fromRect.width / 2 - 16}px;top:${fromRect.top + fromRect.height / 2 - 16}px`;
+    document.body.appendChild(g);
+    requestAnimationFrame(() => {
+      g.style.transform = `translate(${to.left + 60 - fromRect.left}px, ${to.top + to.height / 2 - fromRect.top - fromRect.height / 2}px) scale(.7)`;
+      g.style.opacity = '.2';
+    });
+    setTimeout(() => g.remove(), 450);
+  }
+  const firstTime = game.dishes.indexOf(recipeIdx) === game.dishes.length - 1;
+  if (levelId === 1 && !tutDone.dish) {
+    tutDone.dish = 1;
+    hint(`🍳 出菜啦!${INGREDIENTS[r.a].e}+${INGREDIENTS[r.b].e}=${r.e} ${r.name}!菜谱合成也能消,每出 3 道菜还送道具~`, 6000);
+  } else {
+    hint(firstTime ? `✨ 新菜谱:${r.e} ${r.name}!` : `叮!${r.e} ${r.name} +1`, 2200);
+  }
+  // 道具奖励
+  while (game.dishes.length - rewardedDishes >= 3) {
+    rewardedDishes += 3;
+    const ks = Object.keys(tools).filter(k => tools[k] < 3);
+    if (!ks.length) break;
+    const k = ks[Math.floor(Math.random() * ks.length)];
+    tools[k]++;
+    setTimeout(() => hint(`🎁 出满 3 道菜,奖励道具:${TOOL_NAMES[k]} +1!`, 2600), 900);
+  }
 }
 
 function fly(from, to, t, cb) {
   const g = document.createElement('div');
   g.className = 'ghost-tile';
   g.style.cssText = `left:${from.left}px;top:${from.top}px;width:${from.width}px;height:${from.height}px;background:${tint(t)};font-size:${Math.round(from.width * .55)}px`;
-  g.textContent = EMOJIS[t.type];
+  g.textContent = EMO(t);
   document.body.appendChild(g);
   requestAnimationFrame(() => {
     const s = to.width / from.width;
@@ -341,8 +403,8 @@ function useTool(kind) {
 // ———————————— 结算 ————————————
 function checkEnd() {
   if (game.status === 'won') {
-    if (levelId === 1) store.set('unlock2', true);
-    else store.set('wins2', store.get('wins2', 0) + 1);
+    if (levelId < 5) store.set('maxLv', Math.max(store.get('maxLv', 1), levelId + 1));
+    else store.set('god', store.get('god', 0) + 1);
     setTimeout(() => { sfx.win(); confetti(); showModal(true); }, 350);
   } else if (game.status === 'lost') {
     setTimeout(() => { sfx.lose(); showModal(false); }, 500);
@@ -352,21 +414,23 @@ function checkEnd() {
 function showModal(won) {
   const secs = Math.round((Date.now() - startTime) / 1000);
   const done = game.clearedCount();
+  const att = store.get('att', {});
   const canRevive = !won && game.snapshot && tools.undo > 0;
+  const dishStat = game.dishes.length ? ` · 出品 ${game.dishes.length} 道菜` : '';
   let mascot, title, line, btns = '';
-  if (won && levelId === 1) {
-    mascot = '🥳'; title = '热身完成!';
-    line = '第 2 关已解锁,去会会传说中的地狱?';
-    btns = `<button class="m-btn primary" data-act="next">🌋 挑战第 2 关</button>
+  if (won && levelId < 5) {
+    mascot = '🥳'; title = LEVELS[levelId].name.split('· ')[1] + ',过!';
+    line = `${LEVELS[levelId + 1].name}已解锁,续火吗?`;
+    btns = `<button class="m-btn primary" data-act="next">${LEVEL_META[levelId + 1].icon} 开下一灶</button>
             <button class="m-btn plain" data-act="home">回首页</button>`;
   } else if (won) {
-    mascot = '🏆'; title = '你就是那 2%!!';
-    line = '地狱难度通关,请立刻去好友群炫耀';
-    btns = `<button class="m-btn primary" data-act="retry">再虐一次</button>
+    mascot = '👑'; title = '传说灶神,就是你!!';
+    line = '<1% 的通过率也拦不住你,快去好友群立牌坊';
+    btns = `<button class="m-btn primary" data-act="retry">再封神一次</button>
             <button class="m-btn plain" data-act="home">功成身退</button>`;
   } else {
-    mascot = '😿'; title = '卡槽满了…';
-    line = levelId === 2 ? LOSE_LINES[Math.floor(Math.random() * LOSE_LINES.length)] : '别慌,热身关多点几下就过~';
+    mascot = '😿'; title = '备菜槽满了…';
+    line = levelId <= 2 ? '别慌,前两关多试试就熟了~' : LOSE_LINES[Math.floor(Math.random() * LOSE_LINES.length)];
     btns = `${canRevive ? '<button class="m-btn primary" data-act="revive">💊 撤回复活(×1)</button>' : ''}
             <button class="m-btn ${canRevive ? 'plain' : 'primary'}" data-act="retry">再来一次</button>
             <button class="m-btn plain" data-act="home">回首页</button>`;
@@ -378,7 +442,7 @@ function showModal(won) {
       <div class="m-mascot">${mascot}</div>
       <h2>${title}</h2>
       <p class="m-line">${line}</p>
-      <p class="m-stats">消除 ${done}/${game.total} · 用时 ${secs} 秒 · 连线 ${game.linkCount} 次${levelId === 2 ? ' · 第 ' + store.get('attempts2', 1) + ' 次挑战' : ''}</p>
+      <p class="m-stats">消除 ${done}/${game.total}${dishStat} · 用时 ${secs} 秒 · 第 ${att[levelId] || 1} 次挑战</p>
       ${btns}
     </div>`;
   overlay.addEventListener('click', e => {
@@ -386,7 +450,7 @@ function showModal(won) {
     if (!act) return;
     overlay.remove();
     if (act === 'home') showHome();
-    else if (act === 'next') startLevel(2);
+    else if (act === 'next') startLevel(levelId + 1);
     else if (act === 'retry') startLevel(levelId);
     else if (act === 'revive') { tools.undo--; game.undo(); sfx.pair(); refresh(); }
   });
