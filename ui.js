@@ -50,6 +50,7 @@ const ICONS = {
   undo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 110 12h-3"/></svg>',
   shuffle: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M3 20L21 3"/><path d="M16 21h5v-5"/><path d="M13.5 13.5L21 21"/><path d="M3 4l6.5 6.5"/></svg>',
   pop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V4"/><path d="M7 8l5-5 5 5"/><path d="M4 15v3a3 3 0 003 3h10a3 3 0 003-3v-3"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20V4a2 2 0 00-2-2H6.5A2.5 2.5 0 004 4.5v15z"/><path d="M4 19.5A2.5 2.5 0 006.5 22H20v-5"/><path d="M9 7h7M9 11h5"/></svg>',
 };
 
 const LEVEL_META = {
@@ -156,7 +157,7 @@ function startLevel(lv) {
   renderPlay();
   if (lv === 1 && !tutDone.start) {
     tutDone.start = 1;
-    hint('📋 顶上是顾客点单!做出这些菜 + 清空牌面才能过关~', 5200);
+    hint('📋 顶上是顾客点单!点一下卡片能看配方,做齐这些菜 + 清空牌面才能过关~', 5200);
     setTimeout(() => {
       if (game && levelId === 1 && game.status === 'playing') {
         hint('👆 点一张食材:同款发金光,菜谱搭子发绿光,点发光的那张就能消!', 6500);
@@ -171,6 +172,7 @@ function renderPlay() {
     <div class="topbar">
       <button class="icon-btn" id="btn-back" aria-label="返回首页">${ICONS.back}</button>
       <span class="lv-name">${LEVELS[levelId].name}</span>
+      <button class="icon-btn" id="btn-book" aria-label="查看菜谱">${ICONS.book}</button>
       <button class="icon-btn" id="btn-mute" aria-label="切换声音">${muted ? ICONS.mutedIcon : ICONS.sound}</button>
     </div>
     <div class="orderbar"><span class="ob-label">📋 点单</span><div class="ob-list"></div><span class="ob-dishes"></span></div>
@@ -188,6 +190,11 @@ function renderPlay() {
   svgEl = app.querySelector('.linksvg');
   slotCellEls = [...app.querySelectorAll('.slot-cell')];
   app.querySelector('#btn-back').addEventListener('click', () => { sfx.select(); showHome(); });
+  app.querySelector('#btn-book').addEventListener('click', () => showRecipes(null));
+  app.querySelector('.ob-list').addEventListener('click', e => {
+    const chip = e.target.closest('.ob-chip');
+    if (chip) showRecipes(+chip.dataset.ri);
+  });
   app.querySelector('#btn-mute').addEventListener('click', e => {
     muted = !muted;
     store.set('muted', muted);
@@ -277,7 +284,7 @@ function refresh() {
   });
   // 点单栏
   app.querySelector('.ob-list').innerHTML = game.orders.map(o =>
-    `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}">${o.customer}${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
+    `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}" data-ri="${o.recipe}" role="button" title="点我看配方">${o.customer}${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
   ).join('');
   app.querySelector('.ob-dishes').textContent = game.dishes.length ? `🍽️×${game.dishes.length}` : '';
   // 进度
@@ -351,6 +358,35 @@ function slotMove(t) {
     else tut('slot', '槽里的食材会掉新鲜度(看牌底的小绿条),变质或塞满 7 格都会输!');
     checkEnd();
   });
+}
+
+// 菜谱弹窗:highlight 为菜谱索引时只看这一道,null 则展示本关全部
+function showRecipes(highlight) {
+  if (!game) return;
+  const list = LEVELS[levelId].typeList;
+  const ris = highlight !== null
+    ? [highlight]
+    : RECIPES.map((_, i) => i).filter(i => list.includes(RECIPES[i].a) && list.includes(RECIPES[i].b));
+  const rows = ris.map(ri => {
+    const r = RECIPES[ri];
+    return `<div class="rb-row ${ri === highlight ? 'hl' : ''}">
+      <span>${INGREDIENTS[r.a].e}</span><i>+</i><span>${INGREDIENTS[r.b].e}</span><i>=</i><span>${r.e}</span>
+      <small>${r.name}</small></div>`;
+  }).join('');
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.innerHTML = `
+    <div class="modal clay recipe-book">
+      <h2>${highlight !== null ? RECIPES[highlight].e + ' 怎么做?' : '📖 本关菜谱'}</h2>
+      ${rows}
+      <p class="m-line">搭子食材选中后会发<b class="rb-green">绿光</b>:连线消除,或在备菜槽相遇,都会做出这道菜~</p>
+      <button class="m-btn primary" data-act="close">知道啦</button>
+    </div>`;
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay || (e.target.dataset && e.target.dataset.act === 'close')) overlay.remove();
+  });
+  document.body.appendChild(overlay);
+  sfx.select();
 }
 
 // 出菜:菜品飞向点单栏 + 核销订单提示 + 每 3 道奖励一个道具
