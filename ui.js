@@ -68,6 +68,16 @@ const LOSE_LINES = [
   '差一点点,回锅重造!',
 ];
 
+const LOSE_INFO = {
+  slot: { mascot: '😿', title: '备菜槽满了…' },
+  spoil: { mascot: '🤢', title: '食材变质了…' },
+  orders: { mascot: '😭', title: '顾客没吃上…' },
+};
+const LOSE_TIPS = {
+  spoil: '食材在备菜槽里每走一步掉 1 格新鲜度,归零就坏——快满时用「弹出」把老食材送回牌面能重置新鲜度!',
+  orders: '食材用完了,点单还没出齐——同款配对会吃掉菜谱食材,记得给顾客的菜留材料!',
+};
+
 const TOOL_NAMES = { undo: '撤回', shuffle: '洗牌', pop: '弹出' };
 
 let game = null;
@@ -108,9 +118,9 @@ function showHome() {
       <p class="tagline">连连看 × 菜谱合成 · 可爱但不讲武德</p>
     </div>
     <div class="rules clay">
-      <p>✨ 两张<b>相同</b>食材两折以内连得通,直接消除(金光提示)</p>
-      <p>🍳 <b>菜谱搭子</b>(绿光)连到一起会合成新菜:鸡蛋+米饭=蛋炒饭!每出 3 道菜送 1 个道具</p>
-      <p>🧺 连不到就点进备菜槽,同款或搭子相遇即消;塞满 <b>7 格</b>就输啦</p>
+      <p>✨ <b>同款</b>(金光)或<b>菜谱搭子</b>(绿光)连得通就消;搭子合成新菜:鸡蛋+米饭=蛋炒饭</p>
+      <p>📋 完成顶部<b>顾客点单</b> + 清空牌面才算过关;每出 3 道菜送 1 个道具</p>
+      <p>🧺 备菜槽 7 格;槽里的食材会掉<b>新鲜度</b>,变质/塞满都会输</p>
     </div>
     ${cards}
     <p class="foot">难度经数万局机器人实测校准,每一局都保证有解 🫡</p>
@@ -146,7 +156,12 @@ function startLevel(lv) {
   renderPlay();
   if (lv === 1 && !tutDone.start) {
     tutDone.start = 1;
-    hint('👆 点一张食材:同款发金光,菜谱搭子发绿光,点发光的那张就能消!', 7000);
+    hint('📋 顶上是顾客点单!做出这些菜 + 清空牌面才能过关~', 5200);
+    setTimeout(() => {
+      if (game && levelId === 1 && game.status === 'playing') {
+        hint('👆 点一张食材:同款发金光,菜谱搭子发绿光,点发光的那张就能消!', 6500);
+      }
+    }, 5400);
   }
 }
 
@@ -158,8 +173,8 @@ function renderPlay() {
       <span class="lv-name">${LEVELS[levelId].name}</span>
       <button class="icon-btn" id="btn-mute" aria-label="切换声音">${muted ? ICONS.mutedIcon : ICONS.sound}</button>
     </div>
+    <div class="orderbar"><span class="ob-label">📋 点单</span><div class="ob-list"></div><span class="ob-dishes"></span></div>
     <div class="progress"><div class="progress-fill"></div><span class="progress-num"></span></div>
-    <div class="dishbar"><span class="dish-label">🍽️ 出品</span><span class="dish-list">—</span></div>
     <div class="board-wrap"><div class="board"><svg class="linksvg"></svg></div></div>
     <div class="tools">
       <button class="tool" data-tool="undo">${ICONS.undo}<span>撤回</span><i class="badge"></i></button>
@@ -248,19 +263,23 @@ function refresh() {
     el.classList.toggle('glow', glowGold.has(t.id));
     el.classList.toggle('glow2', glowGreen.has(t.id));
   }
-  // 备菜槽
+  // 备菜槽(带新鲜度条,快变质时告警)
   app.querySelector('.slotbar').classList.toggle('danger', game.slot.length >= game.slotCap - 1 && game.status === 'playing');
   slotCellEls.forEach((c, i) => {
     const id = game.slot[i];
     if (id === undefined) { c.innerHTML = ''; return; }
     const t = game.tiles[id];
-    c.innerHTML = `<div class="slot-tile" style="background:${tint(t)}">${EMO(t)}</div>`;
+    const pct = Math.max(0, Math.min(1, t.fresh / game.freshMax));
+    const rotting = t.fresh <= 4;
+    const spoiled = game.spoiledId === t.id;
+    c.innerHTML = `<div class="slot-tile ${rotting ? 'rotting' : ''}" style="background:${tint(t)}">${spoiled ? '🤢' : EMO(t)}
+      <i class="fresh" style="width:${Math.round(pct * 100)}%;background:${pct > .5 ? '#6EE7B7' : pct > .25 ? '#FCD34D' : '#FB7185'}"></i></div>`;
   });
-  // 出品栏
-  const dishes = game.dishes;
-  app.querySelector('.dish-list').innerHTML = dishes.length
-    ? dishes.slice(-12).map(i => `<span>${RECIPES[i].e}</span>`).join('') + (dishes.length > 12 ? ` <b>×${dishes.length}</b>` : '')
-    : '—';
+  // 点单栏
+  app.querySelector('.ob-list').innerHTML = game.orders.map(o =>
+    `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}">${o.customer}${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
+  ).join('');
+  app.querySelector('.ob-dishes').textContent = game.dishes.length ? `🍽️×${game.dishes.length}` : '';
   // 进度
   const done = game.clearedCount();
   app.querySelector('.progress-fill').style.width = (done / game.total * 100) + '%';
@@ -307,7 +326,7 @@ function animateLink(a, b, res) {
   setTimeout(() => {
     svgEl.innerHTML = '';
     [a, b].forEach(t => tileEls.get(t.id).classList.remove('zap'));
-    if (res.recipe !== null) onDish(res.recipe, bRect);
+    if (res.recipe !== null) onDish(res.recipe, bRect, res.order);
     refresh();
     checkEnd();
   }, 380);
@@ -326,19 +345,19 @@ function slotMove(t) {
   fly(from, to, t, () => {
     busy = false;
     if (res.paired) { sfx.pair(); burstAt(to); } else { sfx.slot(); }
-    if (res.recipe !== null) onDish(res.recipe, to);
+    if (res.recipe !== null) onDish(res.recipe, to, res.order);
     refresh();
     if (res.paired) { if (res.recipe === null) tut('pair', '同款在备菜槽相遇,自动消除,槽位不亏!'); }
-    else tut('slot', '备菜槽只有 7 格,塞满就输咯,且行且珍惜 🧐');
+    else tut('slot', '槽里的食材会掉新鲜度(看牌底的小绿条),变质或塞满 7 格都会输!');
     checkEnd();
   });
 }
 
-// 出菜:菜品飞向出品栏 + 提示 + 每 3 道奖励一个道具
-function onDish(recipeIdx, fromRect) {
+// 出菜:菜品飞向点单栏 + 核销订单提示 + 每 3 道奖励一个道具
+function onDish(recipeIdx, fromRect, orderRes) {
   const r = RECIPES[recipeIdx];
   sfx.dish();
-  const bar = app.querySelector('.dishbar');
+  const bar = app.querySelector('.orderbar');
   if (bar) {
     const to = bar.getBoundingClientRect();
     const g = document.createElement('div');
@@ -352,12 +371,15 @@ function onDish(recipeIdx, fromRect) {
     });
     setTimeout(() => g.remove(), 450);
   }
-  const firstTime = game.dishes.indexOf(recipeIdx) === game.dishes.length - 1;
   if (levelId === 1 && !tutDone.dish) {
     tutDone.dish = 1;
-    hint(`🍳 出菜啦!${INGREDIENTS[r.a].e}+${INGREDIENTS[r.b].e}=${r.e} ${r.name}!菜谱合成也能消,每出 3 道菜还送道具~`, 6000);
+    hint(`🍳 出菜啦!${INGREDIENTS[r.a].e}+${INGREDIENTS[r.b].e}=${r.e} ${r.name}!这就是顾客点的菜,点单栏 +1~`, 6000);
+  } else if (orderRes && orderRes.completed) {
+    hint(`${orderRes.order.customer} 顾客满意!${r.e} ${r.name} 订单完成!`, 2800);
+  } else if (orderRes) {
+    hint(`📋 ${r.e} ${r.name} 出餐 ${orderRes.order.done}/${orderRes.order.need}`, 2200);
   } else {
-    hint(firstTime ? `✨ 新菜谱:${r.e} ${r.name}!` : `叮!${r.e} ${r.name} +1`, 2200);
+    hint(`叮!${r.e} ${r.name} +1(没有对应点单,当员工餐吧)`, 2200);
   }
   // 道具奖励
   while (game.dishes.length - rewardedDishes >= 3) {
@@ -429,8 +451,10 @@ function showModal(won) {
     btns = `<button class="m-btn primary" data-act="retry">再封神一次</button>
             <button class="m-btn plain" data-act="home">功成身退</button>`;
   } else {
-    mascot = '😿'; title = '备菜槽满了…';
-    line = levelId <= 2 ? '别慌,前两关多试试就熟了~' : LOSE_LINES[Math.floor(Math.random() * LOSE_LINES.length)];
+    const info = LOSE_INFO[game.loseReason] || LOSE_INFO.slot;
+    mascot = info.mascot; title = info.title;
+    line = LOSE_TIPS[game.loseReason]
+      || (levelId <= 2 ? '别慌,前两关多试试就熟了~' : LOSE_LINES[Math.floor(Math.random() * LOSE_LINES.length)]);
     btns = `${canRevive ? '<button class="m-btn primary" data-act="revive">💊 撤回复活(×1)</button>' : ''}
             <button class="m-btn ${canRevive ? 'plain' : 'primary'}" data-act="retry">再来一次</button>
             <button class="m-btn plain" data-act="home">回首页</button>`;
@@ -442,7 +466,7 @@ function showModal(won) {
       <div class="m-mascot">${mascot}</div>
       <h2>${title}</h2>
       <p class="m-line">${line}</p>
-      <p class="m-stats">消除 ${done}/${game.total}${dishStat} · 用时 ${secs} 秒 · 第 ${att[levelId] || 1} 次挑战</p>
+      <p class="m-stats">点单 ${game.orders.filter(o => o.done >= o.need).length}/${game.orders.length} · 消除 ${done}/${game.total}${dishStat} · 用时 ${secs} 秒 · 第 ${att[levelId] || 1} 次挑战</p>
       ${btns}
     </div>`;
   overlay.addEventListener('click', e => {

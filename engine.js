@@ -1,6 +1,7 @@
 // 「炒了个菜」核心引擎 —— 纯逻辑,无 DOM,浏览器与 Node 通用
-// 规则:多层牌堆(遮挡)× 连连看(两折内连线)× 7 格卡槽
-// 消除方式:同类配对,或“菜谱搭子”合成(如 鸡蛋+米饭=蛋炒饭)
+// 规则:多层牌堆(遮挡)× 连连看(两折内连线)× 7 格备菜槽
+// 消除:同类配对,或“菜谱搭子”合成(鸡蛋+米饭=蛋炒饭)
+// 目标:清空牌面 + 完成顶部顾客点单;槽内食材会掉新鲜度,变质即输
 
 export function mulberry32(seed) {
   let a = seed >>> 0;
@@ -15,7 +16,7 @@ export function mulberry32(seed) {
 export function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
 
 // ———————————————————————— 食材与菜谱 ————————————————————————
-// 前 20 种食材两两组成 10 道菜谱(搭子互为“跨类配对”),后 4 种是只能同类配对的散装食材
+// 前 20 种食材两两组成 10 道菜谱(搭子互为“跨类配对”),后 12 种是只能同类配对的散装食材
 
 export const INGREDIENTS = [
   { e: '🥚', name: '鸡蛋' }, { e: '🍚', name: '米饭' },
@@ -35,10 +36,6 @@ export const INGREDIENTS = [
   { e: '🥒', name: '黄瓜' }, { e: '🍆', name: '茄子' },
   { e: '🫑', name: '青椒' }, { e: '🧄', name: '大蒜' },
 ];
-
-// 各关食材清单:菜谱搭子成对出现;高关卡散装食材占比更高、单种份数更少 → 更难
-const R = i => [RECIPES[i].a, RECIPES[i].b];
-const LONERS = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
 
 export const RECIPES = [
   { a: 0, b: 1, e: '🍛', name: '蛋炒饭' },
@@ -74,10 +71,15 @@ function grid(layer, x0, y0, cols, rows, step) {
   return out;
 }
 
+// 各关食材清单:菜谱搭子成对出现;高关卡散装食材占比更高、单种份数更少 → 更难
+const R = i => [RECIPES[i].a, RECIPES[i].b];
+const LONERS = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+
 export const LEVELS = {
   1: {
     name: '第 1 关 · 开火热灶',
     typeList: [...R(0), ...R(1), ...R(4)], // 3 道菜谱,6 种食材
+    orders: 2, fresh: 24,
     seeds: [7],
     layout() {
       return [
@@ -90,7 +92,8 @@ export const LEVELS = {
   2: {
     name: '第 2 关 · 小试牛刀',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS.slice(0, 6)], // 4 菜谱 + 6 散装
-    seeds: [8, 36, 12, 4], // bot 实测 56%~78%
+    orders: 3, fresh: 22,
+    seeds: [31, 38, 36, 10, 8, 30, 4, 18, 1], // bot 实测 55%~72%
     layout() {
       const pos = [];
       for (const L of [1, 3, 5]) pos.push(...grid(L, 3, 3, 4, 4, 2)); // 48
@@ -103,7 +106,8 @@ export const LEVELS = {
   3: {
     name: '第 3 关 · 渐入佳境',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS], // 4 菜谱 + 12 散装
-    seeds: [38, 3, 13, 40, 28], // bot 实测 6%~38%
+    orders: 4, fresh: 20,
+    seeds: [35, 7, 40, 36, 14, 8, 28], // bot 实测 10%~16%
     layout() {
       const pos = [];
       for (const L of [1, 3, 5]) pos.push(...grid(L, 3, 3, 5, 5, 2)); // 75
@@ -116,7 +120,8 @@ export const LEVELS = {
   4: {
     name: '第 4 关 · 地狱后厨',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...LONERS.slice(0, 10)], // 6 菜谱 + 10 散装
-    seeds: [3, 5, 15, 30, 25, 31], // bot 实测 3.3%~6%
+    orders: 5, fresh: 18,
+    seeds: [40, 12, 24, 1, 4, 8, 28, 36, 41, 43], // bot 实测 1%~4%
     layout() {
       const pos = [];
       for (const L of [1, 3, 5]) pos.push(...grid(L, 3, 3, 5, 5, 2)); // 75
@@ -130,7 +135,8 @@ export const LEVELS = {
   5: {
     name: '第 5 关 · 传说灶神',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...R(6), ...R(7), ...LONERS], // 8 菜谱 + 12 散装
-    seeds: [1, 4, 9, 14, 22, 41, 50, 13, 48, 45, 57, 12], // bot 实测 0.3%~1.3%,均 ≥1 胜确认有解
+    orders: 6, fresh: 19,
+    seeds: [6, 17, 19, 30, 31, 58, 70, 51, 7, 11, 60, 64], // bot 实测 0.3%~1.7%,均 ≥1 胜确认有解
     layout() {
       const pos = [];
       for (const L of [1, 3, 5, 7]) pos.push(...grid(L, 3, 3, 5, 5, 2)); // 100
@@ -154,6 +160,8 @@ function evenCounts(total, k) {
   return counts;
 }
 
+const CUSTOMERS = ['🐰', '🐱', '🐻', '🐶', '🦊', '🐼', '🐹', '🐨'];
+
 export function buildLevel(levelId, seed) {
   const cfg = LEVELS[levelId];
   const pos = cfg.layout();
@@ -168,6 +176,20 @@ export function buildLevel(levelId, seed) {
   const game = new Game(pos.map((p, i) => ({ ...p, type: types[i] })));
   game.levelId = levelId;
   game.seed = seed;
+  game.freshMax = cfg.fresh;
+  // 生成顾客点单:从本关可做的菜谱里抽;份数不超过该菜谱可合成的上限,保证开局可完成
+  const cnt = {};
+  types.forEach(t => { cnt[t] = (cnt[t] || 0) + 1; });
+  const avail = RECIPES.map((_, i) => i).filter(i => cnt[RECIPES[i].a] && cnt[RECIPES[i].b]);
+  for (let i = avail.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [avail[i], avail[j]] = [avail[j], avail[i]];
+  }
+  game.orders = avail.slice(0, cfg.orders).map(ri => {
+    const maxDish = Math.min(cnt[RECIPES[ri].a], cnt[RECIPES[ri].b]);
+    const need = Math.min(maxDish, rng() < 0.2 + levelId * 0.12 ? 2 : 1);
+    return { recipe: ri, need, done: 0, customer: CUSTOMERS[Math.floor(rng() * CUSTOMERS.length)] };
+  });
   return game;
 }
 
@@ -177,13 +199,17 @@ const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
 export class Game {
   constructor(tiles) {
-    this.tiles = tiles.map((t, i) => ({ id: i, x: t.x, y: t.y, layer: t.layer, type: t.type, state: 'board' }));
+    this.tiles = tiles.map((t, i) => ({ id: i, x: t.x, y: t.y, layer: t.layer, type: t.type, state: 'board', fresh: 0 }));
     this.total = this.tiles.length;
     this.slot = [];      // 槽内牌 id,按进入顺序
     this.slotCap = 7;
     this.status = 'playing'; // playing | won | lost
+    this.loseReason = null;  // slot(槽满) | spoil(变质) | orders(订单没出齐)
+    this.spoiledId = null;
     this.linkCount = 0;
     this.dishes = [];    // 本局做出的菜(菜谱索引,按时间顺序)
+    this.orders = [];    // 顾客点单 [{recipe, need, done, customer}]
+    this.freshMax = 99;
     this.trackHistory = false;
     this.snapshot = null;
     const xs = this.tiles.map(t => t.x), ys = this.tiles.map(t => t.y);
@@ -197,6 +223,7 @@ export class Game {
   coverers(t) { return this.boardTiles().filter(o => o.layer > t.layer && this.overlaps(o, t)); }
   isFree(t) { return t.state === 'board' && this.coverers(t).length === 0; }
   freeTiles() { return this.boardTiles().filter(t => this.isFree(t)); }
+  ordersDone() { return this.orders.every(o => o.done >= o.need); }
 
   // —— 连连看连通检测:折角 ≤2;连线飞在两牌较高层之上,只被不低于该层的牌挡住 ——
   linkPath(a, b) {
@@ -267,10 +294,13 @@ export class Game {
       states: this.tiles.map(t => t.state),
       types: this.tiles.map(t => t.type),
       pos: this.tiles.map(t => [t.x, t.y, t.layer]),
+      fresh: this.tiles.map(t => t.fresh),
       slot: this.slot.slice(),
       status: this.status,
+      loseReason: this.loseReason,
       linkCount: this.linkCount,
       dishes: this.dishes.slice(),
+      orders: this.orders.map(o => ({ ...o })),
     };
   }
 
@@ -278,22 +308,51 @@ export class Game {
     if (!this.snapshot) return false;
     const s = this.snapshot;
     this.tiles.forEach((t, i) => {
-      t.state = s.states[i]; t.type = s.types[i];
+      t.state = s.states[i]; t.type = s.types[i]; t.fresh = s.fresh[i];
       [t.x, t.y, t.layer] = s.pos[i];
     });
     this.slot = s.slot.slice();
     this.status = s.status;
+    this.loseReason = s.loseReason;
+    this.spoiledId = null;
     this.linkCount = s.linkCount;
     this.dishes = s.dishes.slice();
+    this.orders = s.orders.map(o => ({ ...o }));
     this.snapshot = null;
     return true;
   }
 
   _checkWin() {
-    if (this.tiles.every(t => t.state === 'gone')) this.status = 'won';
+    if (this.status !== 'playing') return;
+    if (this.tiles.every(t => t.state === 'gone')) {
+      if (this.ordersDone()) this.status = 'won';
+      else { this.status = 'lost'; this.loseReason = 'orders'; }
+    }
   }
 
-  // 连线消除;成功返回 { path, recipe }(recipe 为菜谱索引,同类配对时为 null)
+  // 出菜:记录 + 核销订单;返回 {order, completed} 或 null(没有对应订单)
+  _makeDish(recipeIdx) {
+    this.dishes.push(recipeIdx);
+    const o = this.orders.find(x => x.recipe === recipeIdx && x.done < x.need);
+    if (!o) return null;
+    o.done++;
+    return { order: o, completed: o.done >= o.need };
+  }
+
+  // 每走一步,槽内(本步新进的除外)食材新鲜度 -1;归零即变质判负
+  _tickFresh(excludeId) {
+    for (const id of this.slot) {
+      if (id === excludeId) continue;
+      const t = this.tiles[id];
+      if (--t.fresh <= 0 && this.status === 'playing') {
+        this.status = 'lost';
+        this.loseReason = 'spoil';
+        this.spoiledId = id;
+      }
+    }
+  }
+
+  // 连线消除;成功返回 { path, recipe, order }
   link(a, b) {
     if (this.status !== 'playing') return null;
     const path = this.linkPath(a, b);
@@ -302,9 +361,10 @@ export class Game {
     const recipe = a.type !== b.type ? RECIPE_OF[a.type] : null;
     a.state = 'gone'; b.state = 'gone';
     this.linkCount++;
-    if (recipe !== null) this.dishes.push(recipe);
+    const order = recipe !== null ? this._makeDish(recipe) : null;
+    this._tickFresh(null);
     this._checkWin();
-    return { path, recipe };
+    return { path, recipe, order };
   }
 
   // 入槽;槽内已有同类或菜谱搭子则立刻消除/合成(不占容量);塞入第 7 张单牌即失败
@@ -322,14 +382,20 @@ export class Game {
       this.slot.splice(mi, 1);
       this.tiles[matchId].state = 'gone';
       t.state = 'gone';
-      if (recipe !== null) this.dishes.push(recipe);
+      const order = recipe !== null ? this._makeDish(recipe) : null;
+      this._tickFresh(null);
       this._checkWin();
-      return { paired: true, matchId, recipe };
+      return { paired: true, matchId, recipe, order };
     }
     t.state = 'slot';
+    t.fresh = this.freshMax;
     this.slot.push(t.id);
-    if (this.slot.length >= this.slotCap) this.status = 'lost';
-    return { paired: false, recipe: null };
+    this._tickFresh(t.id);
+    if (this.status === 'playing' && this.slot.length >= this.slotCap) {
+      this.status = 'lost';
+      this.loseReason = 'slot';
+    }
+    return { paired: false, recipe: null, order: null };
   }
 
   shuffle(rng) {
@@ -345,6 +411,7 @@ export class Game {
     return true;
   }
 
+  // 弹出:槽内最早(也最不新鲜)的至多 3 张回到场面最顶层中央,新鲜度重置
   popOut() {
     if (this.status !== 'playing' || !this.slot.length) return false;
     this.mark();
@@ -356,6 +423,7 @@ export class Game {
     ids.forEach((id, i) => {
       const t = this.tiles[id];
       t.state = 'board';
+      t.fresh = 0;
       t.x = cx + (i - 1) * 3;
       t.y = cy;
       t.layer = maxL;
@@ -365,32 +433,81 @@ export class Game {
 }
 
 // ———————————————————————— 难度校准 bot ————————————————————————
-// 策略:优先与槽内牌配对/合成 → 场上自由对(槽紧时才被迫连线)→ 挑“搭档最接近露出”的单张
-// 匹配一律用 matches()(同类 + 菜谱搭子)。不使用道具,水平≈会规划的普通玩家。
+// 策略:保鲜告急先救 → 与槽内配对/合成(优先核销订单、避免饿死订单)→ 场上自由对 → 挑“搭档最接近露出”的单张
+// 不使用道具,水平≈会规划的普通玩家。
+
+function remainingNeed(game, recipeIdx) {
+  let n = 0;
+  for (const o of game.orders) if (o.recipe === recipeIdx) n += o.need - o.done;
+  return n;
+}
+
+// 同类消掉 2 张 type 后,是否会让该菜谱的剩余订单做不齐
+function starves(game, type) {
+  const p = PARTNER[type];
+  if (p === undefined) return false;
+  const need = remainingNeed(game, RECIPE_OF[type]);
+  if (!need) return false;
+  let cntT = 0, cntP = 0;
+  for (const t of game.tiles) {
+    if (t.state === 'gone') continue;
+    if (t.type === type) cntT++;
+    else if (t.type === p) cntP++;
+  }
+  return Math.min(cntT - 2, cntP) < need;
+}
+
+// 消除动作打分:核销订单的合成 3 > 不饿死订单的同类 2 > 普通合成 1 > 会饿死订单的同类 0
+function moveScore(game, ta, tb) {
+  if (ta !== tb) return remainingNeed(game, RECIPE_OF[ta]) > 0 ? 3 : 1;
+  return starves(game, ta) ? 0 : 2;
+}
 
 export function botPlay(game, rng) {
   let guard = 0;
   while (game.status === 'playing' && guard++ < 3000) {
     const free = game.freeTiles();
     if (!free.length) break;
+    const slotTiles = game.slot.map(id => game.tiles[id]);
 
-    const slotTypes = game.slot.map(id => game.tiles[id].type);
-    const comp = free.filter(t => slotTypes.some(st => matches(st, t.type)));
-    if (comp.length) { game.sendToSlot(pick(rng, comp)); continue; }
+    // 0. 保鲜告急:优先消掉快变质的槽内牌
+    const urgent = slotTiles.filter(s => s.fresh <= 4).sort((a, b) => a.fresh - b.fresh);
+    let acted = false;
+    for (const s of urgent) {
+      const m = free.find(f => matches(f.type, s.type));
+      if (m) { game.sendToSlot(m); acted = true; break; }
+    }
+    if (acted) continue;
 
+    // 1. 与槽内配对/合成
+    const comps = [];
+    for (const f of free) {
+      const s = slotTiles.find(s2 => matches(s2.type, f.type));
+      if (s) comps.push({ f, score: moveScore(game, s.type, f.type) + rng() * .5 });
+    }
+    if (comps.length) {
+      comps.sort((a, b) => b.score - a.score);
+      game.sendToSlot(comps[0].f);
+      continue;
+    }
+
+    // 2. 场上自由对
     const pairList = [];
     for (let i = 0; i < free.length; i++)
       for (let j = i + 1; j < free.length; j++)
-        if (matches(free[i].type, free[j].type)) pairList.push([free[i], free[j]]);
+        if (matches(free[i].type, free[j].type))
+          pairList.push({ a: free[i], b: free[j], score: moveScore(game, free[i].type, free[j].type) + rng() * .5 });
     if (pairList.length) {
-      if (game.slot.length <= 5) { game.sendToSlot(pick(rng, pairList)[0]); continue; }
+      pairList.sort((x, y) => y.score - x.score);
+      if (game.slot.length <= 5) { game.sendToSlot(pairList[0].a); continue; }
       let linked = false; // 槽已 6:入单张即死,只能试连线
-      for (const [a, b] of pairList) {
+      for (const { a, b } of pairList) {
         if (game.link(a, b)) { linked = true; break; }
       }
       if (linked) continue;
     }
 
+    // 3. 挑“搭档最接近露出”的单张
     let bestT = null, bestS = Infinity;
     for (const t of free) {
       const partners = game.boardTiles().filter(u => u !== t && matches(u.type, t.type));
