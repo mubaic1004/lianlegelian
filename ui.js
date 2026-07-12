@@ -1,7 +1,7 @@
 // 「炒了个菜」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v4.0';
+const VERSION = 'v1.0.0.4'; // 版本规则:每次改动末位 +1,大改动才进主位
 const app = document.getElementById('app');
 
 const store = {
@@ -40,19 +40,22 @@ function tone(freq, dur = .1, type = 'sine', gain = .12, delay = 0) {
     o.start(t); o.stop(t + dur + .02);
   } catch { /* AudioContext 不可用则静默 */ }
 }
-// 白噪声(带通)≈ 人群欢呼的“沙”声
-function noiseBurst(dur = .35, gain = .08, delay = 0) {
+// 轻柔的气声(钟形包络,缓起缓落,绝无“啪”的瞬态)≈ 远处温柔的欢呼
+function softSwell(dur = .6, gain = .03, delay = 0) {
   if (muted || sfxVol <= 0) return;
   try {
     const ctx = ac();
     const len = Math.floor(ctx.sampleRate * dur);
     const buf = ctx.createBuffer(1, len, ctx.sampleRate);
     const d = buf.getChannelData(0);
-    for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 2);
+    for (let i = 0; i < len; i++) {
+      const env = Math.sin(Math.PI * i / len); // 钟形:慢慢起、慢慢落
+      d[i] = (Math.random() * 2 - 1) * env * env;
+    }
     const src = ctx.createBufferSource();
     src.buffer = buf;
     const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass'; bp.frequency.value = 1400; bp.Q.value = .6;
+    bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = .5;
     const g = ctx.createGain();
     g.gain.value = gain * sfxVol;
     src.connect(bp); bp.connect(g); g.connect(ctx.destination);
@@ -64,9 +67,10 @@ const sfx = {
   slot() { tone(430, .09, 'sine', .1); tone(320, .1, 'sine', .05, .04); },
   link() { tone(784, .09, 'triangle', .1); tone(1175, .12, 'triangle', .09, .06); },
   pair() { tone(880, .1, 'triangle', .1); tone(1319, .14, 'triangle', .09, .07); },
-  cheer() { // 出菜欢呼:上行琶音 + 人群沙声
-    [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .14, 'triangle', .11, i * .045));
-    noiseBurst(.45, .1, .05);
+  cheer() { // 出菜欢呼:温暖的慢琶音(sine 柔音色)+ 远处轻轻的气声
+    [523, 659, 784].forEach((f, i) => tone(f, .5, 'sine', .05, i * .07));
+    tone(1047, .65, 'sine', .035, .22);
+    softSwell(.7, .028, .08);
   },
   clink() { // 饮品碰杯:两下清脆玻璃声
     tone(1975, .12, 'triangle', .13);
@@ -79,33 +83,52 @@ const sfx = {
   win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .09)); },
 };
 
-// —— 背景音乐:32 步活泼小调循环(主旋律 triangle + 低音 sine)——
-const BGM_STEP = .16;
-const NOTE = { C3: 130.81, F3: 174.61, G3: 196, C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5 };
-const LEAD = [
-  'C5', null, 'E5', 'G5', 'A5', 'G5', 'E5', null,
-  'F5', 'A5', 'C6', null, 'B5', 'A5', 'G5', null,
-  'C5', null, 'E5', 'G5', 'A5', 'G5', 'E5', 'G5',
-  'D5', 'E5', 'F5', 'D5', 'C5', null, null, null,
+// —— 背景音乐:梦幻柔美的循环小曲(参考奇迹暖暖式配器)——
+// 三个声部叠加,绝非单音:①和弦铺底(pad)②竖琴式分解和弦琶音 ③稀疏的柔旋律
+// I–V–vi–IV 梦幻进行,音符全部缓起缓落,无尖锐瞬态
+const BGM_STEP = .27; // 八分音符,约 111 BPM,舒缓
+const NOTE = {
+  A2: 110, C3: 130.81, E3: 164.81, F3: 174.61, G3: 196, A3: 220, B3: 246.94,
+  C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, B4: 493.88,
+  C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5,
+};
+// 每小节 8 步:和弦音(pad)、低音、琶音音级、旋律 [起步, 音名, 时值(步)]
+const BGM_BARS = [
+  { pad: ['C4', 'E4', 'G4'], bass: 'C3', arp: ['C4', 'E4', 'G4', 'C5'], mel: [[0, 'E5', 3], [4, 'G5', 2], [6, 'A5', 2]] },
+  { pad: ['B3', 'D4', 'G4'], bass: 'G3', arp: ['G3', 'B3', 'D4', 'G4'], mel: [[0, 'G5', 3], [4, 'D5', 4]] },
+  { pad: ['A3', 'C4', 'E4'], bass: 'A2', arp: ['A3', 'C4', 'E4', 'A4'], mel: [[0, 'C5', 2], [2, 'E5', 2], [4, 'D5', 4]] },
+  { pad: ['A3', 'C4', 'F4'], bass: 'F3', arp: ['F3', 'A3', 'C4', 'F4'], mel: [[0, 'A4', 2], [2, 'G4', 2], [4, 'C5', 4]] },
 ];
-const BASS = ['C3', 'C3', 'F3', 'F3', 'G3', 'G3', 'C3', 'C3', 'C3', 'C3', 'F3', 'F3', 'G3', 'G3', 'C3', 'C3'];
+const ARP_ORDER = [0, 1, 2, 3, 2, 3, 2, 1]; // 竖琴式上下行
 let bgmGain = null, bgmTimer = null;
-function applyBgmVol() { if (bgmGain) bgmGain.gain.value = muted ? 0 : bgmVol * .5; }
-function bgmNote(f, t, dur, type, g) {
+function applyBgmVol() { if (bgmGain) bgmGain.gain.value = muted ? 0 : bgmVol * .55; }
+// 缓起(attack)+ 缓落的柔音符
+function bgmNote(f, t, dur, type, g, attack = .04) {
   const ctx = ac();
   const o = ctx.createOscillator(), gn = ctx.createGain();
   o.type = type; o.frequency.value = f;
-  gn.gain.setValueAtTime(g, t);
+  gn.gain.setValueAtTime(.0001, t);
+  gn.gain.linearRampToValueAtTime(g, t + attack);
   gn.gain.exponentialRampToValueAtTime(.001, t + dur);
   o.connect(gn).connect(bgmGain);
-  o.start(t); o.stop(t + dur + .02);
+  o.start(t); o.stop(t + dur + .03);
 }
 function loopBGM() {
   const ctx = ac();
   const t0 = ctx.currentTime + .06;
-  LEAD.forEach((n, i) => { if (n) bgmNote(NOTE[n], t0 + i * BGM_STEP, .15, 'triangle', .06); });
-  BASS.forEach((b, i) => { if (b) bgmNote(NOTE[b], t0 + i * 2 * BGM_STEP, .26, 'sine', .05); });
-  bgmTimer = setTimeout(loopBGM, 32 * BGM_STEP * 1000 - 30);
+  const barDur = 8 * BGM_STEP;
+  BGM_BARS.forEach((bar, bi) => {
+    const bt = t0 + bi * barDur;
+    bar.pad.forEach(n => bgmNote(NOTE[n], bt, barDur * .96, 'sine', .022, .3)); // 和弦铺底,极缓起
+    bgmNote(NOTE[bar.bass], bt, barDur * .9, 'sine', .045, .12);                 // 低音
+    ARP_ORDER.forEach((ai, si) => {                                              // 竖琴琶音
+      bgmNote(NOTE[bar.arp[ai]], bt + si * BGM_STEP, BGM_STEP * 1.6, 'triangle', .026, .02);
+    });
+    bar.mel.forEach(([s, n, len]) => {                                           // 柔旋律
+      bgmNote(NOTE[n], bt + s * BGM_STEP, len * BGM_STEP * 1.05, 'sine', .05, .07);
+    });
+  });
+  bgmTimer = setTimeout(loopBGM, BGM_BARS.length * barDur * 1000 - 40);
 }
 function startBGM() {
   if (bgmTimer !== null) return;
@@ -155,6 +178,7 @@ const toolRng = mulberry32((Date.now() % 2147483647) || 1);
 
 // ———————————— 首页(主菜单) ————————————
 function showHome() {
+  document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
   app.innerHTML = `
@@ -180,6 +204,7 @@ function showHome() {
 
 // ———————————— 选关页 ————————————
 function showLevels() {
+  document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
   const maxLv = store.get('maxLv', 1);
@@ -221,6 +246,7 @@ function showLevels() {
 
 // ———————————— 设置页 ————————————
 function showSettings() {
+  document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
   app.innerHTML = `
@@ -298,6 +324,7 @@ function guideSteps() {
 let guideIdx = 0, guideClone = null;
 
 function showInstructions() {
+  document.body.classList.add('in-game');
   game = null;
   window.__game = null;
   guideIdx = 0;
@@ -408,6 +435,7 @@ function startLevel(lv) {
 }
 
 function renderPlay() {
+  document.body.classList.add('in-game');
   app.innerHTML = `
   <div class="screen play">
     <div class="topbar">
@@ -835,6 +863,18 @@ function tut(evt, text) {
 }
 
 // ———————————— 启动 ————————————
+(function decorate() { // 菜单页的漂浮小装饰(对局中自动隐藏)
+  const deco = document.getElementById('bg-deco');
+  if (!deco) return;
+  ['☁️', '🍓', '🥕', '⭐', '🍳', '☁️', '🧀', '🍋'].forEach((e, i) => {
+    const s = document.createElement('span');
+    s.className = 'deco';
+    s.textContent = e;
+    s.style.cssText = `left:${(i * 37 + 5) % 88}%;top:${(i * 31 + 4) % 86}%;font-size:${24 + (i % 3) * 9}px;animation-duration:${5 + (i % 4)}s;animation-delay:${(-i * 1.4).toFixed(1)}s`;
+    deco.appendChild(s);
+  });
+})();
+
 window.addEventListener('resize', () => { if (game) { layoutBoard(); refresh(); } });
 document.addEventListener('pointerdown', () => { ac(); startBGM(); }, { once: true });
 showHome();

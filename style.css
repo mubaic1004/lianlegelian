@@ -2,20 +2,24 @@
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
 body {
-  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-rounded, system-ui, sans-serif;
-  background: linear-gradient(160deg, #FDF2F8 0%, #F5F0FF 55%, #EDFBF6 100%);
+  font-family: 'ZCOOL KuaiLe', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-rounded, system-ui, sans-serif;
+  /* 奶油黄→樱花粉→薄荷绿,叠白色波点 —— 参考肥鹅健身房的暖调卡通背景 */
+  background:
+    radial-gradient(rgba(255, 255, 255, .4) 13%, transparent 14%) 0 0 / 48px 48px,
+    radial-gradient(rgba(255, 255, 255, .4) 13%, transparent 14%) 24px 24px / 48px 48px,
+    linear-gradient(165deg, #FFE9AE 0%, #FFD9E4 52%, #C9F0DE 100%);
   color: #4A3350;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
-#bg-deco { position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background:
-    radial-gradient(220px 220px at 12% 8%, rgba(249,168,212,.28), transparent 70%),
-    radial-gradient(260px 260px at 92% 20%, rgba(196,181,253,.26), transparent 70%),
-    radial-gradient(240px 240px at 20% 95%, rgba(110,231,183,.2), transparent 70%),
-    radial-gradient(200px 200px at 85% 88%, rgba(253,211,77,.2), transparent 70%);
+body.in-game {
+  background: linear-gradient(160deg, #FFF4DC 0%, #FFE9F1 55%, #E7F8EF 100%);
 }
+#bg-deco { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.deco { position: absolute; opacity: .55; animation: decoFloat ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(180, 110, 60, .15)); }
+body.in-game .deco { display: none; }
+@keyframes decoFloat { to { transform: translateY(-20px) rotate(7deg); } }
 #app { position: relative; z-index: 1; height: 100dvh; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
 .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 button { font-family: inherit; }
