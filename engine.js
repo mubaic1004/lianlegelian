@@ -19,35 +19,35 @@ export function pick(rng, arr) { return arr[Math.floor(rng() * arr.length)]; }
 // 前 20 种食材两两组成 10 道菜谱(搭子互为“跨类配对”),后 12 种是只能同类配对的散装食材
 
 export const INGREDIENTS = [
-  { e: '🥚', name: '鸡蛋' }, { e: '🍚', name: '米饭' },
-  { e: '🍞', name: '面包' }, { e: '🥬', name: '生菜' },
-  { e: '🍅', name: '番茄' }, { e: '🧀', name: '芝士' },
-  { e: '🌽', name: '玉米' }, { e: '🧈', name: '黄油' },
-  { e: '🍓', name: '草莓' }, { e: '🥛', name: '牛奶' },
-  { e: '🍋', name: '柠檬' }, { e: '🧊', name: '冰块' },
-  { e: '🥔', name: '土豆' }, { e: '🥩', name: '牛肉' },
-  { e: '🐟', name: '鲜鱼' }, { e: '🦐', name: '鲜虾' },
-  { e: '🍎', name: '苹果' }, { e: '🍯', name: '蜂蜜' },
-  { e: '🍫', name: '巧克力' }, { e: '🍌', name: '香蕉' },
-  { e: '🥕', name: '胡萝卜' }, { e: '🍇', name: '葡萄' },
-  { e: '🍄', name: '蘑菇' }, { e: '🥨', name: '椒盐卷饼' },
-  { e: '🥦', name: '西兰花' }, { e: '🌰', name: '栗子' },
-  { e: '🍪', name: '饼干' }, { e: '🧅', name: '洋葱' },
-  { e: '🥒', name: '黄瓜' }, { e: '🍆', name: '茄子' },
-  { e: '🫑', name: '青椒' }, { e: '🧄', name: '大蒜' },
+  { e: '🥚', name: '鸡蛋', en: 'Egg' }, { e: '🍚', name: '米饭', en: 'Rice' },
+  { e: '🍞', name: '面包', en: 'Bread' }, { e: '🥬', name: '生菜', en: 'Lettuce' },
+  { e: '🍅', name: '番茄', en: 'Tomato' }, { e: '🧀', name: '芝士', en: 'Cheese' },
+  { e: '🌽', name: '玉米', en: 'Corn' }, { e: '🧈', name: '黄油', en: 'Butter' },
+  { e: '🍓', name: '草莓', en: 'Strawberry' }, { e: '🥛', name: '牛奶', en: 'Milk' },
+  { e: '🍋', name: '柠檬', en: 'Lemon' }, { e: '🧊', name: '冰块', en: 'Ice' },
+  { e: '🥔', name: '土豆', en: 'Potato' }, { e: '🥩', name: '牛肉', en: 'Beef' },
+  { e: '🐟', name: '鲜鱼', en: 'Fish' }, { e: '🦐', name: '鲜虾', en: 'Shrimp' },
+  { e: '🍎', name: '苹果', en: 'Apple' }, { e: '🍯', name: '蜂蜜', en: 'Honey' },
+  { e: '🍫', name: '巧克力', en: 'Chocolate' }, { e: '🍌', name: '香蕉', en: 'Banana' },
+  { e: '🥕', name: '胡萝卜', en: 'Carrot' }, { e: '🍇', name: '葡萄', en: 'Grape' },
+  { e: '🍄', name: '蘑菇', en: 'Mushroom' }, { e: '🥨', name: '椒盐卷饼', en: 'Pretzel' },
+  { e: '🥦', name: '西兰花', en: 'Broccoli' }, { e: '🌰', name: '栗子', en: 'Chestnut' },
+  { e: '🍪', name: '饼干', en: 'Cookie' }, { e: '🧅', name: '洋葱', en: 'Onion' },
+  { e: '🥒', name: '黄瓜', en: 'Cucumber' }, { e: '🍆', name: '茄子', en: 'Eggplant' },
+  { e: '🫑', name: '青椒', en: 'Pepper' }, { e: '🧄', name: '大蒜', en: 'Garlic' },
 ];
 
 export const RECIPES = [
-  { a: 0, b: 1, e: '🍛', name: '蛋炒饭' },
-  { a: 2, b: 3, e: '🥪', name: '三明治' },
-  { a: 4, b: 5, e: '🍕', name: '玛格丽特披萨' },
-  { a: 6, b: 7, e: '🍿', name: '黄油爆米花' },
-  { a: 8, b: 9, e: '🍦', name: '草莓奶昔' },
-  { a: 10, b: 11, e: '🍹', name: '冰柠特调' },
-  { a: 12, b: 13, e: '🍲', name: '土豆炖牛肉' },
-  { a: 14, b: 15, e: '🥘', name: '海鲜锅' },
-  { a: 16, b: 17, e: '🥧', name: '蜂蜜苹果派' },
-  { a: 18, b: 19, e: '🧁', name: '香蕉可可杯' },
+  { a: 0, b: 1, e: '🍛', name: '蛋炒饭', en: 'Egg Fried Rice' },
+  { a: 2, b: 3, e: '🥪', name: '三明治', en: 'Sandwich' },
+  { a: 4, b: 5, e: '🍕', name: '玛格丽特披萨', en: 'Margherita Pizza' },
+  { a: 6, b: 7, e: '🍿', name: '黄油爆米花', en: 'Butter Popcorn' },
+  { a: 8, b: 9, e: '🍦', name: '草莓奶昔', en: 'Strawberry Shake', drink: true },
+  { a: 10, b: 11, e: '🍹', name: '冰柠特调', en: 'Iced Lemonade', drink: true },
+  { a: 12, b: 13, e: '🍲', name: '土豆炖牛肉', en: 'Beef & Potato Stew' },
+  { a: 14, b: 15, e: '🥘', name: '海鲜锅', en: 'Seafood Pot' },
+  { a: 16, b: 17, e: '🥧', name: '蜂蜜苹果派', en: 'Honey Apple Pie' },
+  { a: 18, b: 19, e: '🧁', name: '香蕉可可杯', en: 'Banana Cocoa Cup' },
 ];
 
 export const PARTNER = {};   // 食材 → 菜谱搭子
@@ -77,7 +77,7 @@ const LONERS = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
 
 export const LEVELS = {
   1: {
-    name: '第 1 关 · 开火热灶',
+    name: '第 1 关 · 开火热灶', en: 'Level 1 · Light the Stove',
     typeList: [...R(0), ...R(1), ...R(4)], // 3 道菜谱,6 种食材
     orders: 2, fresh: 24,
     seeds: [7],
@@ -90,7 +90,7 @@ export const LEVELS = {
     },
   },
   2: {
-    name: '第 2 关 · 小试牛刀',
+    name: '第 2 关 · 小试牛刀', en: 'Level 2 · First Chops',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS.slice(0, 6)], // 4 菜谱 + 6 散装
     orders: 3, fresh: 22,
     seeds: [31, 38, 36, 10, 8, 30, 4, 18, 1], // bot 实测 55%~72%
@@ -104,7 +104,7 @@ export const LEVELS = {
     },
   },
   3: {
-    name: '第 3 关 · 渐入佳境',
+    name: '第 3 关 · 渐入佳境', en: 'Level 3 · On a Roll',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS], // 4 菜谱 + 12 散装
     orders: 4, fresh: 20,
     seeds: [35, 7, 40, 36, 14, 8, 28], // bot 实测 10%~16%
@@ -118,7 +118,7 @@ export const LEVELS = {
     },
   },
   4: {
-    name: '第 4 关 · 地狱后厨',
+    name: "第 4 关 · 地狱后厨", en: "Level 4 · Hell's Kitchen",
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...LONERS.slice(0, 10)], // 6 菜谱 + 10 散装
     orders: 5, fresh: 18,
     seeds: [40, 12, 24, 1, 4, 8, 28, 36, 41, 43], // bot 实测 1%~4%
@@ -133,7 +133,7 @@ export const LEVELS = {
     },
   },
   5: {
-    name: '第 5 关 · 传说灶神',
+    name: '第 5 关 · 传说灶神', en: 'Level 5 · Kitchen God',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...R(6), ...R(7), ...LONERS], // 8 菜谱 + 12 散装
     orders: 6, fresh: 19,
     seeds: [6, 17, 19, 30, 31, 58, 70, 51, 7, 11, 60, 64], // bot 实测 0.3%~1.7%,均 ≥1 胜确认有解
