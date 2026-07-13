@@ -1,7 +1,7 @@
 // 「炒了个菜」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v1.0.0.8'; // 版本规则:每次改动末位 +1,大改动才进主位
+const VERSION = 'v1.0.0.9'; // 版本规则:每次改动末位 +1,大改动才进主位
 const app = document.getElementById('app');
 
 const store = {

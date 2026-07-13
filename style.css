@@ -1,9 +1,14 @@
 /* 「连了个连」 —— 黏土拟物可爱风 */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
+/* 阿里妈妈方圆体(wght700 + 最圆切角,按游戏用字子集化,77KB)—— 胖、圆、笔画简洁 */
+@font-face {
+  font-family: 'FangYuan';
+  src: url('fonts/fangyuan.woff2') format('woff2');
+  font-display: swap;
+}
 :root {
-  /* 艺术字(标题/按钮):站酷庆科黄油体 —— 圆润粗线条,可爱且清晰 */
-  --font-fun: 'ZCOOL QingKe HuangYou', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', ui-rounded, sans-serif;
+  --font-fun: 'FangYuan', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', ui-rounded, sans-serif;
 }
 body {
   /* 正文/说明小字:清晰的系统圆体 */
@@ -13,7 +18,7 @@ body {
     radial-gradient(rgba(255, 255, 255, .4) 13%, transparent 14%) 0 0 / 48px 48px,
     radial-gradient(rgba(255, 255, 255, .4) 13%, transparent 14%) 24px 24px / 48px 48px,
     linear-gradient(165deg, #FFE9AE 0%, #FFD9E4 52%, #C9F0DE 100%);
-  color: #4A3350;
+  color: #453B34;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
@@ -44,20 +49,19 @@ button { font-family: inherit; }
 .title-art { position: relative; display: inline-block; padding: 14px 16px 18px; }
 .home h1 {
   font-size: 50px;
-  color: #FCD34D; /* 明黄,贴合背景 */
-  letter-spacing: 9px;
-  transform: scaleX(1.08); /* 轻微拉宽 */
+  color: #FF9FBC; /* 蜜桃粉,和奶油粉背景同族 */
+  letter-spacing: 6px;
   text-shadow:
-    -2px -1.5px 0 #6BE3CE, -3px 3px 0 #6BE3CE,  /* 薄荷托底(左上) */
-    3px 3px 0 #FF4D8D, 4px 5px 0 #FF4D8D,        /* 玫红投影(右下) */
-    6px 8px 12px rgba(244, 63, 126, .25);
+    -2px -2px 0 #FFFDF4, -3px 3px 0 #FFFDF4,   /* 奶油白托底(左上) */
+    4px 4px 0 #EA6390, 5px 6px 0 #EA6390,       /* 深一号玫瑰投影(右下) */
+    7px 9px 12px rgba(234, 99, 144, .28);
 }
 .hang { position: absolute; font-size: 24px; pointer-events: none; z-index: 2; animation: hangSway 2.8s ease-in-out infinite alternate; filter: drop-shadow(0 3px 4px rgba(200, 60, 110, .3)); }
 .hang-berry { top: -10px; left: 4%; transform: rotate(-18deg); }
 .hang-ice { top: -14px; right: 3%; font-size: 27px; transform: rotate(15deg); animation-delay: -1.4s; }
 @keyframes hangSway { to { transform: rotate(8deg) translateY(-4px); } }
-.tagline { font-size: 12.5px; color: #A6789F; font-weight: 600; margin-top: 5px; }
-.rules { padding: 11px 14px; font-size: 12px; line-height: 1.75; color: #7A5A85; width: 100%; }
+.tagline { font-size: 12.5px; color: #9A9088; font-weight: 600; margin-top: 5px; }
+.rules { padding: 11px 14px; font-size: 12px; line-height: 1.75; color: #6E655D; width: 100%; }
 .rules b { color: #DB2777; }
 .lv-card { display: flex; align-items: center; gap: 12px; padding: 11px 14px; width: 100%; flex-shrink: 0; cursor: pointer; text-align: left; transition: transform .15s ease-out; }
 .lv-card:hover { transform: translateY(-2px); }
@@ -65,17 +69,17 @@ button { font-family: inherit; }
 .lv-card.locked { filter: grayscale(.65) opacity(.8); }
 .lv-emoji { font-size: 28px; }
 .lv-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.lv-info b { font-size: 15.5px; color: #59306B; }
-.lv-info small { font-size: 11.5px; color: #AD87B8; }
+.lv-info b { font-size: 15.5px; color: #3E3630; }
+.lv-info small { font-size: 11.5px; color: #9C948B; }
 .lv-rate { font-size: 11px; font-weight: 800; border-radius: 999px; padding: 5px 10px; white-space: nowrap; }
 .lv-rate.easy { background: #D1FAE5; color: #059669; }
 .lv-rate.mid { background: #FEF3C7; color: #B45309; }
 .lv-rate.hard { background: #FFE4E6; color: #E11D48; }
-.foot { font-size: 10.5px; color: #BB9DC6; text-align: center; }
+.foot { font-size: 10.5px; color: #B3A89E; text-align: center; }
 
 /* ———— 主菜单 ———— */
 .home.menu { justify-content: center; gap: 12px; overflow-y: visible; }
-.menu-btn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 17px 24px; font-size: 19px; font-weight: 800; color: #8B3A7C; cursor: pointer; transition: transform .15s ease-out; }
+.menu-btn { width: 100%; display: flex; align-items: center; gap: 14px; padding: 17px 24px; font-size: 19px; font-weight: 800; color: #3E3630; cursor: pointer; transition: transform .15s ease-out; }
 .menu-btn:hover { transform: translateY(-2px); }
 .menu-btn:active { transform: translateY(2px); }
 .menu-btn .mi { font-size: 27px; }
@@ -86,7 +90,7 @@ button { font-family: inherit; }
 
 /* ———— 设置页 ———— */
 .set-card { width: 100%; padding: 20px 18px; display: flex; flex-direction: column; gap: 20px; }
-.set-row { display: flex; align-items: center; gap: 10px; font-weight: 800; color: #8B3A7C; font-size: 14.5px; }
+.set-row { display: flex; align-items: center; gap: 10px; font-weight: 800; color: #3E3630; font-size: 14.5px; }
 .set-row label { min-width: 46px; }
 .set-ic { font-size: 20px; }
 .set-row input[type="range"] { flex: 1; accent-color: #EC4899; height: 22px; cursor: pointer; }
@@ -114,7 +118,7 @@ button { font-family: inherit; }
 .ga-rot { position: relative; display: inline-grid; place-items: center; }
 .ga-bar { position: absolute; bottom: -3px; left: 10%; height: 4px; border-radius: 2px; background: #6EE7B7; animation: gaRot 2.2s linear infinite; }
 @keyframes gaRot { 0% { width: 80%; background: #6EE7B7; } 55% { background: #FCD34D; } 100% { width: 4%; background: #FB7185; } }
-.g-text { font-size: 13.5px; font-weight: 700; color: #7A5A85; line-height: 1.6; }
+.g-text { font-size: 13.5px; font-weight: 700; color: #6E655D; line-height: 1.6; }
 .g-nav { position: fixed; bottom: max(18px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); z-index: 2300; display: flex; align-items: center; gap: 14px; }
 .g-btn { border: 3px solid #fff; background: rgba(255, 255, 255, .95); color: #B457A0; border-radius: 999px; padding: 10px 22px; font-size: 16px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 #F3C4DC; }
 .g-btn.primary { background: linear-gradient(180deg, #F9A8D4, #EC4899); color: #fff; border-color: #F9A8D4; box-shadow: 0 4px 0 #C0347C; }
@@ -127,7 +131,7 @@ button { font-family: inherit; }
 
 /* ———— 对局页 ———— */
 .topbar { display: flex; align-items: center; gap: 8px; padding: 10px 14px 2px; }
-.lv-name { flex: 1; text-align: center; font-weight: 800; font-size: 15px; color: #8B3A7C; }
+.lv-name { flex: 1; text-align: center; font-weight: 800; font-size: 15px; color: #3E3630; }
 .icon-btn { width: 40px; height: 40px; border: 3px solid #fff; border-radius: 14px; background: rgba(255,255,255,.9); cursor: pointer; display: grid; place-items: center; color: #B457A0; box-shadow: 0 3px 0 #F3C4DC; }
 .icon-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #F3C4DC; }
 .icon-btn svg { width: 20px; height: 20px; }
@@ -181,7 +185,7 @@ button { font-family: inherit; }
 @keyframes shakeB { 25% { transform: rotate(1.4deg); } 75% { transform: rotate(-1.4deg); } }
 
 .tools { display: flex; gap: 10px; justify-content: center; padding: 8px 12px 2px; }
-.tool { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 18px; border: 3px solid #fff; cursor: pointer; border-radius: 16px; background: rgba(255,255,255,.92); box-shadow: 0 4px 0 #F3C4DC, 0 6px 12px rgba(236, 72, 153, .12); font-size: 11px; font-weight: 800; color: #9D4E77; }
+.tool { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 18px; border: 3px solid #fff; cursor: pointer; border-radius: 16px; background: rgba(255,255,255,.92); box-shadow: 0 4px 0 #F3C4DC, 0 6px 12px rgba(236, 72, 153, .12); font-size: 11px; font-weight: 800; color: #4A443E; }
 .tool svg { width: 20px; height: 20px; }
 .tool:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #F3C4DC; }
 .tool:disabled { opacity: .38; cursor: default; }
@@ -210,7 +214,7 @@ button { font-family: inherit; }
 .modal-overlay .modal { animation: popIn .32s cubic-bezier(.4, 1.6, .5, 1); }
 .m-mascot { font-size: 58px; }
 .modal h2 { color: #EC4899; margin: 8px 0 4px; font-size: 24px; }
-.m-line { font-size: 13px; color: #8B6690; font-weight: 600; margin-bottom: 4px; }
+.m-line { font-size: 13px; color: #776C61; font-weight: 600; margin-bottom: 4px; }
 .m-stats { font-size: 12px; color: #A78BB5; margin-bottom: 14px; }
 .m-btn { display: block; width: 100%; margin-top: 10px; padding: 13px; border: none; border-radius: 16px; cursor: pointer; font-size: 15px; font-weight: 800; }
 .m-btn.primary { background: linear-gradient(180deg, #F9A8D4, #EC4899); color: #fff; box-shadow: 0 5px 0 #C0347C, 0 8px 14px rgba(236, 72, 153, .3); }
@@ -223,7 +227,7 @@ button { font-family: inherit; }
 .recipe-book { max-height: 78vh; overflow-y: auto; }
 .rb-row { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 26px; padding: 7px 4px; border-radius: 14px; }
 .rb-row i { font-style: normal; font-size: 15px; color: #C9A8D4; font-weight: 800; }
-.rb-row small { font-size: 12px; color: #8B6690; font-weight: 700; margin-left: 4px; white-space: nowrap; }
+.rb-row small { font-size: 12px; color: #776C61; font-weight: 700; margin-left: 4px; white-space: nowrap; }
 .rb-row.hl { background: #ECFDF5; box-shadow: inset 0 0 0 2px #6EE7B7; }
 .rb-green { color: #059669; }
 
