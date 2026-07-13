@@ -274,11 +274,11 @@ button:focus-visible { outline: 3px solid #F472B6; outline-offset: 2px; }
   filter: drop-shadow(0 1px 1px rgba(0,0,0,.12)); }
 
 /* —— 皮肤:对局背景(default 地狱后厨 = 暖厨房;其余各主题)—— */
-body.in-game.skin-kitchen { background: linear-gradient(160deg, #FFF4DC 0%, #FDE8CE 55%, #F6DDBE 100%); }
-body.in-game.skin-ranch   { background: linear-gradient(160deg, #EAF7D8 0%, #D3EFC0 55%, #B7E6C4 100%); }
-body.in-game.skin-bakery  { background: linear-gradient(160deg, #FFE9F1 0%, #FBD9E6 55%, #F6E6D8 100%); }
-body.in-game.skin-sky     { background: linear-gradient(160deg, #D9F0FF 0%, #C3E4FB 45%, #E7F6FF 100%); }
-body.in-game.skin-forest  { background: linear-gradient(160deg, #E4F1DC 0%, #CBE4C4 55%, #AFD4B0 100%); }
+body.in-game.skin-kitchen { background: url('assets/bg/skin-kitchen.jpg') center top/cover no-repeat, #F3D39C; }
+body.in-game.skin-ranch   { background: url('assets/bg/skin-ranch.jpg')   center top/cover no-repeat, #8FCF62; }
+body.in-game.skin-bakery  { background: url('assets/bg/skin-bakery.jpg')  center top/cover no-repeat, #F7D0DF; }
+body.in-game.skin-sky     { background: url('assets/bg/skin-sky.jpg')     center top/cover no-repeat, #DCF1FF; }
+body.in-game.skin-forest  { background: url('assets/bg/skin-forest.jpg')  center top/cover no-repeat, #EAF3DD; }
 
 /* —— 设置:皮肤 / 主题选择器 —— */
 .set-title { font-family: var(--font-fun); font-size: 15px; color: #3E3630; margin-bottom: 10px; }
@@ -302,3 +302,91 @@ body.in-game.skin-forest  { background: linear-gradient(160deg, #E4F1DC 0%, #CBE
 .unlock-box { background: linear-gradient(180deg,#FFF7E8,#FFEFD6); border: 2px dashed #F6C87B; border-radius: 14px; padding: 8px 12px; margin: 4px 0 10px; }
 .unlock-row { font-size: 12.5px; color: #A76B2E; line-height: 1.7; }
 .unlock-row b { font-family: var(--font-fun); color: #E67E22; }
+
+/* ═══════════ v2 phase2:选关页 + 教程卡片(匹配美术)═══════════ */
+/* 温暖格纹背景(选关/教学复用) */
+.lvsel, .tut {
+  background:
+    repeating-linear-gradient(0deg, rgba(255,220,150,.14) 0 22px, transparent 22px 44px),
+    repeating-linear-gradient(90deg, rgba(255,220,150,.14) 0 22px, transparent 22px 44px),
+    linear-gradient(160deg, #FFF0CE 0%, #FFE6C4 100%);
+  align-items: center; padding: 12px 16px 0; gap: 10px; overflow-y: auto; position: relative;
+}
+/* —— 选关页 —— */
+.lvsel-top { display: flex; align-items: center; width: 100%; gap: 8px; }
+.lvsel-title { flex: 1; text-align: center; font-family: var(--font-fun); font-size: 26px; color: #fff; letter-spacing: 3px;
+  padding: 8px 10px; border-radius: 16px;
+  background: linear-gradient(180deg, #C98A4E, #A56B34); border: 3px solid #E7B37A;
+  text-shadow: 0 2px 0 #7E4E22, 0 -1px 0 #7E4E22, 2px 0 0 #7E4E22, -2px 0 0 #7E4E22; box-shadow: 0 4px 0 #7E4E22; }
+.lvsel-list { width: 100%; display: flex; flex-direction: column; gap: 12px; z-index: 1; }
+.lvc { display: flex; align-items: center; gap: 12px; padding: 14px 14px; border-radius: 22px; cursor: pointer;
+  border: 3px dashed rgba(255,255,255,.8); text-align: left; transition: transform .14s; box-shadow: 0 5px 0 rgba(180,140,90,.22); }
+.lvc:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(180,140,90,.22); }
+.lvc.locked { filter: grayscale(.5) opacity(.75); }
+.lv-yellow { background: linear-gradient(160deg,#FFF4CC,#FCE6A0); }
+.lv-green  { background: linear-gradient(160deg,#EAF6CE,#D2ECAF); }
+.lv-tan    { background: linear-gradient(160deg,#FBE7C6,#F3D3A0); }
+.lv-pink   { background: linear-gradient(160deg,#FBDCE2,#F6C3CE); }
+.lv-purple { background: linear-gradient(160deg,#ECE0F4,#DAC7EC); }
+.lvc-badge { position: relative; width: 54px; height: 54px; flex-shrink: 0; border-radius: 50%;
+  background: rgba(255,255,255,.75); display: grid; place-items: center; font-family: var(--font-fun);
+  font-size: 26px; color: #7A5A2E; box-shadow: inset 0 0 0 3px rgba(255,255,255,.9), 0 3px 5px rgba(160,120,70,.2); }
+.lvc-icon { position: absolute; bottom: -8px; right: -6px; font-size: 22px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.15)); font-style: normal; }
+.lvc-mid { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.lvc-mid b { font-family: var(--font-fun); font-size: 17px; color: #4A3B28; }
+.lvc-mid small { font-size: 11.5px; color: #8A7350; }
+.lvc-stat { color: #A6906B; }
+.lvc-right { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
+.lvc-timer { font-size: 20px; opacity: .8; }
+.lvc-rate { font-family: var(--font-fun); font-size: 12px; border-radius: 999px; padding: 4px 9px; white-space: nowrap; text-align: center; line-height: 1.2; }
+.lvc-rate.easy { background: #D6F5C6; color: #4E9A2E; }
+.lvc-rate.mid { background: #FBE6BE; color: #C6821F; }
+.lvc-rate.hard { background: #FBD2D8; color: #D8506A; }
+.lvsel-foot { font-size: 11px; color: #A6906B; text-align: center; padding: 6px 20px 90px; z-index: 1; }
+.lvsel-hippo { position: fixed; bottom: -6px; right: 4px; width: 116px; z-index: 0; pointer-events: none;
+  filter: drop-shadow(0 3px 5px rgba(150,110,60,.25)); }
+
+/* —— 教程卡片 —— */
+.tut { justify-content: center; }
+.tut-stage { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; padding: 10px 0 90px; }
+.tut-card { position: relative; width: 100%; max-width: 380px; padding: 22px 18px 20px; min-height: 340px;
+  background: linear-gradient(180deg, #FFFDF6, #FFF4E2); }
+.tut-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); font-family: var(--font-fun);
+  background: linear-gradient(180deg,#FBB13C,#F2921A); color: #fff; font-size: 14px; padding: 4px 16px; border-radius: 999px;
+  border: 2px solid #fff; box-shadow: 0 3px 0 #C56E10; letter-spacing: 1px; }
+.tut-title { font-family: var(--font-fun); font-size: 23px; color: #4A3B28; text-align: center; line-height: 1.35; margin: 12px 0 16px; }
+.tut-art { background: rgba(255,244,224,.7); border: 2px dashed #EFD9B0; border-radius: 16px; padding: 14px 10px; margin-bottom: 14px; min-height: 78px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.tut-flow { display: flex; align-items: center; gap: 8px; font-size: 34px; }
+.tut-flow.big { font-size: 28px; gap: 5px; flex-wrap: wrap; justify-content: center; }
+.tut-flow i, .tut-recipes i { font-style: normal; font-size: 17px; color: #C7A876; font-weight: 800; }
+.tut-recipes { display: flex; flex-direction: column; gap: 8px; }
+.tut-recipes .rb-row { display: flex; align-items: center; gap: 8px; font-size: 27px; justify-content: center; }
+.tut-recipes .rb-row i { font-size: 17px; color: #C7A876; }
+.tut-slot { display: flex; gap: 4px; margin-top: 4px; }
+.tut-cell { width: 30px; height: 30px; border-radius: 8px; background: #FFF; display: grid; place-items: center; font-size: 17px; box-shadow: inset 0 0 0 2px #F0E2C8; }
+.tut-cell.empty { background: #F5EEE0; box-shadow: none; }
+.tut-cell.rot { animation: rotPulse .7s infinite; }
+.tut-rot { position: relative; display: inline-grid; place-items: center; }
+.tut-bar { position: absolute; bottom: -6px; left: 12%; height: 4px; border-radius: 2px; background: #6EE7B7; animation: gaRot 2.2s linear infinite; }
+.tut-sub { font-size: 12px; color: #A6906B; }
+.tut-text { font-size: 13.5px; color: #6E5C42; line-height: 1.6; text-align: center; max-width: 70%; }
+.tut-hippo { position: absolute; right: 6px; bottom: 8px; width: 96px; filter: drop-shadow(0 3px 5px rgba(150,110,60,.22)); }
+
+
+
+/* 对局页:功能 UI 透明并绝对定位到背景图预留的槽位(cover 后高度铺满,槽位%=屏幕%) */
+body.in-game .screen.play { position: relative; }
+body.in-game .screen.play .topbar,
+body.in-game .screen.play .orderbar,
+body.in-game .screen.play .progress { position: absolute; left: 0; right: 0; z-index: 3; }
+body.in-game .screen.play .topbar { top: 6.4dvh; padding: 0 16px; }
+body.in-game .screen.play .orderbar { top: 12.6dvh; background: transparent; box-shadow: none; padding: 0 20px 0 52px; min-height: 5dvh; }
+body.in-game .screen.play .progress { top: 19dvh; left: 44px; right: 20px; background: rgba(255,255,255,.28); box-shadow: none; height: 2.4dvh; }
+body.in-game .screen.play .board-wrap { margin-top: 24dvh; }
+/* 按钮/文字:透明底,坐在背景绘制的按钮/标题槽上 */
+body.in-game .screen.play .icon-btn { background: rgba(255,251,243,.94); box-shadow: 0 2px 0 rgba(200,150,100,.22); border-color: #fff; color: #C0567F; width: 42px; height: 42px; }
+body.in-game .screen.play .icon-btn:active { transform: translateY(1px); }
+body.in-game .screen.play .lv-name { color: #7A4A2A; text-shadow: 0 1px 0 rgba(255,255,255,.55); }
+body.in-game .ob-label { display: none; }               /* 背景已有夹板图标 */
+body.in-game .progress-fill { opacity: .5; }
+body.in-game .progress-time, body.in-game .progress-num { color: #9A5A34; }

@@ -234,11 +234,11 @@ const ICONS = {
 };
 
 const LEVEL_META = {
-  1: { icon: '🥚', rate: () => T('通过率 99%', '99% clear'), cls: 'easy', blurb: () => T('30 秒开火热灶', '30-second warm-up') },
-  2: { icon: '🔪', rate: () => '≈65%', cls: 'easy', blurb: () => T('刀工渐稳,五层小塔', 'Five layers, steady hands') },
-  3: { icon: '🥘', rate: () => '≈15%', cls: 'mid', blurb: () => T('散装食材多起来了', 'Loose ingredients pile up') },
-  4: { icon: '🌶️', rate: () => '≈4%', cls: 'hard', blurb: () => T('地狱后厨,盲堆七层', 'Blind stacks, 7 deep') },
-  5: { icon: '👑', rate: () => '<1%', cls: 'hard', blurb: () => T('四角盲堆,28 种食材', '4 corners, 28 ingredients') },
+  1: { icon: '🥚', rate: () => '99%', cls: 'easy', tone: 'lv-yellow', blurb: () => T('30 秒开火热灶', '30-second warm-up') },
+  2: { icon: '🔪', rate: () => '≈65%', cls: 'easy', tone: 'lv-green', blurb: () => T('刀工渐稳,五层小塔', 'Five layers, steady hands') },
+  3: { icon: '🥘', rate: () => '≈15%', cls: 'mid', tone: 'lv-tan', blurb: () => T('散装食材多起来了', 'Loose ingredients pile up') },
+  4: { icon: '🌶️', rate: () => '≈4%', cls: 'hard', tone: 'lv-pink', blurb: () => T('地狱后厨,盲堆七层', 'Blind stacks, 7 deep') },
+  5: { icon: '👑', rate: () => '<1%', cls: 'hard', tone: 'lv-purple', blurb: () => T('四角盲堆,28 种食材', '4 corners, 28 ingredients') },
 };
 
 let game = null;
@@ -290,27 +290,31 @@ function showLevels() {
   const cards = [1, 2, 3, 4, 5].map(lv => {
     const m = LEVEL_META[lv];
     const locked = lv > maxLv;
+    const mins = Math.round(LEVELS[lv].time / 60);
     const sub = locked
-      ? T(`通过第 ${lv - 1} 关解锁`, `Clear level ${lv - 1} to unlock`)
-      : `${att[lv] ? `${m.blurb()} · ${T(`已阵亡 ${att[lv]} 次`, `${att[lv]} wipes`)}` : m.blurb()} · ⏱ ${Math.round(LEVELS[lv].time / 60)}${T(' 分钟', ' min')}`;
-    return `<button class="lv-card clay ${locked ? 'locked' : ''}" data-lv="${lv}">
-      <span class="lv-emoji">${locked ? '🔒' : m.icon}</span>
-      <span class="lv-info"><b>${lvname(lv)}</b><small>${sub}</small></span>
-      <span class="lv-rate ${m.cls}">${m.rate()}</span>
+      ? T(`通过第 ${lv - 1} 关解锁`, `Clear Lv ${lv - 1} to unlock`)
+      : m.blurb();
+    const stat = locked ? '' : `${att[lv] ? T(`已阵亡 ${att[lv]} 次`, `${att[lv]} wipes`) + ' · ' : ''}${mins}${T(' 分钟', ' min')}`;
+    return `<button class="lvc ${m.tone} ${locked ? 'locked' : ''}" data-lv="${lv}">
+      <span class="lvc-badge">${locked ? '🔒' : lv}<em class="lvc-icon">${m.icon}</em></span>
+      <span class="lvc-mid"><b>${lvname(lv)}</b><small>${sub}</small><small class="lvc-stat">${stat}</small></span>
+      <span class="lvc-right"><span class="lvc-timer">⏱</span><span class="lvc-rate ${m.cls}">${T('通过率 ', '')}${m.rate()}</span></span>
     </button>`;
   }).join('');
   app.innerHTML = `
-  <div class="screen home">
-    <div class="topbar bare">
+  <div class="screen lvsel">
+    <div class="lvsel-top">
       <button class="icon-btn" id="btn-back" aria-label="${T('返回', 'Back')}">${ICONS.back}</button>
-      <span class="lv-name">${T('选择关卡', 'Select Level')}</span>
-      <span class="icon-spacer"></span>
+      <div class="lvsel-title">${T('选择关卡', 'Select Level')}</div>
+      <button class="icon-btn" id="btn-set" aria-label="${T('设置', 'Settings')}">⚙️</button>
     </div>
-    ${cards}
-    <p class="foot">${T('难度经数万局机器人实测校准,每一局都保证有解 🫡', 'Tuned with 10k+ bot runs — every deal is solvable 🫡')}</p>
+    <div class="lvsel-list">${cards}</div>
+    <p class="lvsel-foot">${T('难度经数万局机器人实测校准,每一局都保证有解 🫡', 'Tuned with 10k+ bot runs — every deal is solvable 🫡')}</p>
+    <img class="lvsel-hippo" src="${hippoSrc(1)}" alt="">
   </div>`;
   app.querySelector('#btn-back').addEventListener('click', () => { sfx.select(); showHome(); });
-  app.querySelectorAll('.lv-card').forEach(b => b.addEventListener('click', () => {
+  app.querySelector('#btn-set').addEventListener('click', () => { sfx.select(); showSettings(); });
+  app.querySelectorAll('.lvc').forEach(b => b.addEventListener('click', () => {
     const lv = +b.dataset.lv;
     if (lv > store.get('maxLv', 1)) {
       b.classList.add('wobble');
@@ -355,15 +359,7 @@ function showSettings() {
           ${ok ? '' : `<span class="pick-need">${s.need}${T('次', '×')}</span>`}</button>`;
       }).join('')}</div>
     </div>
-    <div class="set-card clay">
-      <div class="set-title">🃏 ${T('卡牌主题', 'Card Theme')} <small>${T('第 5 关每通关 5 次随机掉落一款', 'Random drop per 5 clears of Lv5')}</small></div>
-      <div class="pick-grid">${THEMES.map(t => {
-        const ok = unlockedThemes().has(t.id);
-        return `<button class="pick ${currentTheme === t.id ? 'on' : ''} ${ok ? '' : 'locked'}" data-theme="${t.id}">
-          <span class="pick-name">${ok ? T(t.name, t.en) : '🔒'}</span></button>`;
-      }).join('')}</div>
-      <p class="set-note">${T('卡牌主题美术制作中,当前统一为 Emoji 外观', 'Theme art in progress — tiles currently show Emoji')}</p>
-    </div>
+
     <p class="foot credits">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}<br>
       <small>${T('用 ❤️ 和 🍚 制作', 'Made with ❤️ and 🍚')}</small></p>
   </div>`;
@@ -391,87 +387,51 @@ function showSettings() {
     currentSkin = s.id; store.set('skin', s.id);
     sfx.pair(); playBGM(); showSettings();
   }));
-  app.querySelectorAll('.pick[data-theme]').forEach(b => b.addEventListener('click', () => {
-    if (!unlockedThemes().has(b.dataset.theme)) { b.classList.add('wobble'); setTimeout(() => b.classList.remove('wobble'), 450); sfx.deny(); return; }
-    currentTheme = b.dataset.theme; store.set('theme', b.dataset.theme);
-    sfx.select(); showSettings();
-  }));
+
 }
 
 // ———————————— 玩法教学(step by step 聚光灯引导) ————————————
-function guideSteps() {
+// ———————————— 玩法教学(卡片式,匹配美术)————————————
+function guidePages() {
   return [
-    {
-      target: '.g-orders', scale: 1.12,
-      art: '🐰<i>➜</i>🍛<i>➜</i>✅',
-      zh: '完成顾客点单,才能过关', en: 'Cook every order to win',
-    },
-    {
-      target: '.g-tiles', scale: 1.1,
-      art: '<b class="ga-gold">🥚✨🥚</b>&emsp;<b class="ga-green">🥚💚🍚</b>',
-      zh: '点两张发光的牌:金光 = 同款,绿光 = 菜谱搭子', en: 'Tap two glowing tiles: gold = same, green = recipe pair',
-    },
-    {
-      target: '.g-slot', scale: 1.12,
-      art: '🥚<i>➜</i>🧺<i>…</i>🥚<i>➜</i>💥',
-      zh: '连不到的先放进备菜槽,同款或搭子相遇自动消;塞满 7 格就输', en: "Can't link? Hold it below — pairs clear on arrival. 7 tiles = lose",
-    },
-    {
-      target: '.g-rot', scale: 2.1,
-      art: '<span class="ga-rot"><span class="ga-bar"></span>🍅</span><i>➜</i>🤢',
-      zh: '槽里的食材会变质!绿条走完就输,「弹出」能救', en: 'Held food rots! Empty bar = lose. “Eject” rescues it',
-    },
-    {
-      target: '.g-recipe', scale: 1.18,
-      art: '🥚<i>+</i>🍚<i>=</i>🍛',
-      zh: '搭子合成菜品;点 📖 或点单卡片随时查配方', en: 'Pairs cook dishes — tap 📖 or order chips for recipes',
-    },
+    { hippo: 1, title: T('完成顾客点单<br>才能过关', 'Fill every order<br>to clear the level'),
+      art: `<div class="tut-flow"><span>🐰</span><i>➜</i><span>🍛</span><i>➜</i><span>✅</span></div>`,
+      text: T('按照顾客的点单要求,准备对应的菜品吧!', "Cook the dishes your customers ordered!") },
+    { hippo: 9, title: T('搭配合成菜品', 'Combine to cook'),
+      art: `<div class="tut-recipes">
+        <div class="rb-row"><span>🥚</span><i>+</i><span>🍚</span><i>=</i><span>🍛</span></div>
+        <div class="rb-row"><span>🍓</span><i>+</i><span>🥛</span><i>=</i><span>🍦</span></div></div>`,
+      text: T('菜谱搭子连到一起合成菜品;点 📖 或点单卡片随时查配方。', 'Recipe pairs cook a dish. Tap 📖 or an order chip to see recipes.') },
+    { hippo: 13, title: T('连不到的先放进备菜槽', 'Hold what you can’t link'),
+      art: `<div class="tut-flow"><span>🥚</span><i>➜</i><span>🧺</span><i>…</i><span>🥚</span><i>➜</i><span>💥</span></div>
+        <div class="tut-slot">${['🍞','🥬','🍅'].map(e=>`<span class="tut-cell">${e}</span>`).join('')}${'<span class="tut-cell empty"></span>'.repeat(4)}</div>`,
+      text: T('连不到的先放进备菜槽,同款或搭子相遇自动消;塞满 7 格就输!', 'Send unlinkable tiles to the hold — pairs there clear. 7 tiles = lose!') },
+    { hippo: 12, title: T('槽里的食材会变质', 'Held food goes bad'),
+      art: `<div class="tut-flow"><span class="tut-rot">🍅<i class="tut-bar"></i></span><i>➜</i><span>🤢</span></div>
+        <div class="tut-slot">${['🍞','🥬'].map(e=>`<span class="tut-cell">${e}</span>`).join('')}<span class="tut-cell rot">🍅</span>${'<span class="tut-cell empty"></span>'.repeat(4)}</div>`,
+      text: T('槽里的食材会变质!绿条走完就输,用「弹出」能救它一命!', 'Green bar empties = spoiled = lose. “Eject” rescues it!') },
+    { hippo: 14, title: T('四角盲堆是灶神', 'The corners are for legends'),
+      art: `<div class="tut-flow big"><span>👑</span><i>+</i><span>🍓</span><span>🥛</span><span>🥦</span><span>🍪</span></div>
+        <div class="tut-sub">${T('…共 28 种食材…', '…28 ingredients…')}</div>`,
+      text: T('第 5 关四角盲堆、28 种食材、限时 5 分钟——传说灶神就等你!', 'Level 5: corner stacks, 28 ingredients, 5-min limit. Become the Kitchen God!') },
   ];
 }
 
-let guideIdx = 0, guideClone = null;
+let guideIdx = 0;
 
 function showInstructions() {
   clearInterval(levelTimer);
-  document.body.classList.add('in-game');
+  document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
   guideIdx = 0;
   app.innerHTML = `
-  <div class="screen guide">
-    <div class="g-demo" aria-hidden="true">
-      <div class="orderbar g-orders"><span class="ob-label">📋</span>
-        <div class="ob-list">
-          <span class="ob-chip">🐰🍛<b>0/1</b></span>
-          <span class="ob-chip">🐱🍦<b>0/2</b></span>
-        </div></div>
-      <div class="g-tiles">
-        <span class="d-tile glow" style="background:${TINTS[0]}">🥚</span>
-        <span class="d-tile glow" style="background:${TINTS[0]}">🥚</span>
-        <span class="d-gap"></span>
-        <span class="d-tile glow2" style="background:${TINTS[8]}">🍓</span>
-        <span class="d-tile glow2" style="background:${TINTS[9]}">🥛</span>
-        <span class="d-gap"></span>
-        <span class="d-tile covered" style="background:${TINTS[2]}">🍞</span>
-        <span class="d-tile covered" style="background:${TINTS[3]}">🥬</span>
-      </div>
-      <div class="g-recipe clay">
-        <div class="rb-row"><span>🥚</span><i>+</i><span>🍚</span><i>=</i><span>🍛</span></div>
-        <div class="rb-row"><span>🍓</span><i>+</i><span>🥛</span><i>=</i><span>🍦</span></div>
-      </div>
-      <div class="slotbar clay g-slot">
-        <div class="slot-cell"><div class="slot-tile" style="background:${TINTS[2]}">🍞<i class="fresh" style="width:78%;background:#6EE7B7"></i></div></div>
-        <div class="slot-cell"><div class="slot-tile" style="background:${TINTS[3]}">🥬<i class="fresh" style="width:45%;background:#FCD34D"></i></div></div>
-        <div class="slot-cell"><div class="slot-tile rotting g-rot" style="background:${TINTS[4]}">🍅<i class="fresh" style="width:12%;background:#FB7185"></i></div></div>
-        ${'<div class="slot-cell"></div>'.repeat(4)}
-      </div>
-    </div>
-    <div class="g-mask"></div>
-    <div class="g-caption clay"><div class="g-art"></div><p class="g-text"></p></div>
+  <div class="screen tut">
+    <div class="tut-stage"></div>
     <button class="g-skip">${T('跳过', 'Skip')}</button>
     <div class="g-nav">
       <button class="g-btn" id="g-prev">←</button>
-      <div class="g-dots">${guideSteps().map((_, i) => `<i data-i="${i}"></i>`).join('')}</div>
+      <div class="g-dots">${guidePages().map((_, i) => `<i data-i="${i}"></i>`).join('')}</div>
       <button class="g-btn primary" id="g-next">→</button>
     </div>
   </div>`;
@@ -479,38 +439,27 @@ function showInstructions() {
   app.querySelector('#g-prev').addEventListener('click', () => { if (guideIdx > 0) { sfx.select(); guideStep(guideIdx - 1); } });
   app.querySelector('#g-next').addEventListener('click', () => {
     sfx.select();
-    if (guideIdx < guideSteps().length - 1) guideStep(guideIdx + 1);
+    if (guideIdx < guidePages().length - 1) guideStep(guideIdx + 1);
     else showLevels();
   });
-  requestAnimationFrame(() => guideStep(0));
+  guideStep(0);
 }
 
 function guideStep(i) {
-  const steps = guideSteps();
+  const pages = guidePages();
   guideIdx = i;
-  const st = steps[i];
-  if (guideClone) { guideClone.remove(); guideClone = null; }
-  const target = app.querySelector(st.target);
-  if (!target) return;
-  const r = target.getBoundingClientRect();
-  // 克隆目标区域,提到灰度遮罩之上并放大 —— 聚光灯效果
-  guideClone = target.cloneNode(true);
-  guideClone.classList.add('g-spot');
-  guideClone.style.cssText += `;position:fixed;left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;margin:0;--gs:${st.scale}`;
-  app.querySelector('.guide').appendChild(guideClone);
-  // 说明卡:目标在上半屏放下方,反之放上方
-  const cap = app.querySelector('.g-caption');
-  cap.querySelector('.g-art').innerHTML = st.art;
-  cap.querySelector('.g-text').textContent = T(st.zh, st.en);
-  const vh = window.innerHeight;
-  const cy = r.top + r.height / 2;
-  cap.style.top = cy < vh / 2 ? Math.min(r.bottom + r.height * (st.scale - 1) / 2 + 24, vh - 220) + 'px' : '';
-  cap.style.bottom = cy >= vh / 2 ? (vh - r.top + r.height * (st.scale - 1) / 2 + 24) + 'px' : '';
-  if (cy < vh / 2) cap.style.removeProperty('bottom'); else cap.style.removeProperty('top');
-  // 导航状态
+  const p = pages[i];
+  app.querySelector('.tut-stage').innerHTML = `
+    <div class="tut-card clay">
+      <div class="tut-badge">${i + 1}/${pages.length}</div>
+      <h3 class="tut-title">${p.title}</h3>
+      <div class="tut-art">${p.art}</div>
+      <p class="tut-text">${p.text}</p>
+      <img class="tut-hippo" src="${hippoSrc(p.hippo)}" alt="">
+    </div>`;
   app.querySelectorAll('.g-dots i').forEach((d, di) => d.classList.toggle('on', di === i));
   app.querySelector('#g-prev').disabled = i === 0;
-  app.querySelector('#g-next').textContent = i === steps.length - 1 ? '🍳 ' + T('开玩!', "Cook!") : '→';
+  app.querySelector('#g-next').innerHTML = i === pages.length - 1 ? '🍳' : '→';
 }
 
 // ———————————— 开局与对局渲染 ————————————
@@ -878,16 +827,7 @@ function checkEnd() {
       store.set('god', g);
       // 皮肤:每 10 次通关按顺序解锁下一款(need 恰为 10/20/30/40)
       const justSkin = SKINS.find(s => s.need === g);
-      // 卡牌主题:每 5 次通关随机掉落一款尚未解锁的
-      let justTheme = null;
-      if (g % 5 === 0) {
-        const locked = THEMES.filter(t => t.id !== 'emoji' && !unlockedThemes().has(t.id));
-        if (locked.length) {
-          justTheme = locked[Math.floor(Math.random() * locked.length)];
-          store.set('themesUnlocked', [...store.get('themesUnlocked', []), justTheme.id]);
-        }
-      }
-      window.__justUnlock = { skin: justSkin, theme: justTheme };
+      window.__justUnlock = { skin: justSkin, theme: null };
     }
     setTimeout(() => { sfx.win(); confetti(); showModal(true); }, 350);
   } else if (game.status === 'lost') {
@@ -949,7 +889,6 @@ function showModal(won) {
   const ju = window.__justUnlock;
   if (won && ju) {
     if (ju.skin) unlockBanner += `<div class="unlock-row">🎨 ${T('解锁新皮肤', 'New skin')}:<b>${T(ju.skin.name, ju.skin.en)}</b></div>`;
-    if (ju.theme) unlockBanner += `<div class="unlock-row">🃏 ${T('掉落卡牌主题', 'Theme drop')}:<b>${T(ju.theme.name, ju.theme.en)}</b></div>`;
     window.__justUnlock = null;
   }
   const overlay = document.createElement('div');
