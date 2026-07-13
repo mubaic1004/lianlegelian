@@ -44,15 +44,13 @@ button { font-family: inherit; }
 .title-art { position: relative; display: inline-block; padding: 14px 16px 18px; }
 .home h1 {
   font-size: 50px;
-  color: #F6A96B; /* 暖奶油橙,贴合背景 */
-  letter-spacing: 10px;
-  transform: scaleX(1.14); /* 横向拉宽,更"胖" */
-  -webkit-text-stroke: 2px #F6A96B; /* 适度同色描边,不糊笔画 */
-  paint-order: stroke fill;
+  color: #FCD34D; /* 明黄,贴合背景 */
+  letter-spacing: 9px;
+  transform: scaleX(1.08); /* 轻微拉宽 */
   text-shadow:
-    -2.5px -2px 0 #6BE3CE, -4px 4px 0 #6BE3CE,  /* 薄荷托底(左上) */
-    4px 4px 0 #FF4D8D, 6px 7px 0 #FF4D8D,        /* 玫红投影(右下) */
-    8px 11px 14px rgba(244, 63, 126, .28);
+    -2px -1.5px 0 #6BE3CE, -3px 3px 0 #6BE3CE,  /* 薄荷托底(左上) */
+    3px 3px 0 #FF4D8D, 4px 5px 0 #FF4D8D,        /* 玫红投影(右下) */
+    6px 8px 12px rgba(244, 63, 126, .25);
 }
 .hang { position: absolute; font-size: 24px; pointer-events: none; z-index: 2; animation: hangSway 2.8s ease-in-out infinite alternate; filter: drop-shadow(0 3px 4px rgba(200, 60, 110, .3)); }
 .hang-berry { top: -10px; left: 4%; transform: rotate(-18deg); }
@@ -240,11 +238,9 @@ h1, h2, .menu-btn, .lv-name, .lv-info b, .lv-rate, .m-btn, .g-btn, .g-skip,
 .tagline, .g-art i, .set-row label, .dish-label, .lv-info small, .foot {
   font-family: var(--font-fun);
 }
-/* 同色描边把圆体催胖成粗圆感(中文笔画密,描边要克制以免糊);大字略粗、小字更细 */
-.menu-btn, .lv-info b, .m-btn, .g-btn, .lv-name, h2 { -webkit-text-stroke: .8px currentColor; paint-order: stroke fill; }
-.tool span, .seg button, .lv-rate, .ob-label, .g-skip, .tagline { -webkit-text-stroke: .4px currentColor; paint-order: stroke fill; }
-/* 展示性文字整体横向微胖 */
-.menu-btn, h2, .lv-name { letter-spacing: 1.5px; }
+/* 圆体本身已足够可爱,只给大标题一点点描边增重,其余保持字体原细度以清晰 */
+h2 { -webkit-text-stroke: .3px currentColor; paint-order: stroke fill; }
+.menu-btn, h2, .lv-name { letter-spacing: 1px; }
 
 .progress-time { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #BE185D; }
 .progress-time.urgent { color: #DC2626; animation: urgentBlink .6s infinite; }
