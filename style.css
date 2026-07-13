@@ -255,3 +255,50 @@ button:focus-visible { outline: 3px solid #F472B6; outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; }
 }
+
+/* ═══════════ v2.0.0.0 胖皮厨房:美术接入 ═══════════ */
+/* —— 主界面:整幅手绘图当背景 + 透明可点区域 —— */
+.home-art { position: relative; height: 100dvh; width: 100%;
+  background: url('assets/bg/main.jpg') no-repeat center top / cover; }
+.art-btn { position: absolute; left: 50%; transform: translateX(-50%); width: 64%; height: 6.2%;
+  background: transparent; border: none; cursor: pointer; border-radius: 30px; }
+.art-btn:active { background: rgba(255, 255, 255, .18); }
+.art-btn[data-go="play"] { top: 60.5%; }
+.art-btn[data-go="guide"] { top: 71.8%; }
+.art-btn[data-go="settings"] { top: 83%; }
+.art-ver { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 10px;
+  color: #8a6a4a; opacity: .8; font-family: var(--font-fun); }
+
+/* —— 点单栏:胖皮客人头像 —— */
+.ob-chip .cust { width: 26px; height: 26px; object-fit: contain; vertical-align: middle; margin-right: 1px;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,.12)); }
+
+/* —— 皮肤:对局背景(default 地狱后厨 = 暖厨房;其余各主题)—— */
+body.in-game.skin-kitchen { background: linear-gradient(160deg, #FFF4DC 0%, #FDE8CE 55%, #F6DDBE 100%); }
+body.in-game.skin-ranch   { background: linear-gradient(160deg, #EAF7D8 0%, #D3EFC0 55%, #B7E6C4 100%); }
+body.in-game.skin-bakery  { background: linear-gradient(160deg, #FFE9F1 0%, #FBD9E6 55%, #F6E6D8 100%); }
+body.in-game.skin-sky     { background: linear-gradient(160deg, #D9F0FF 0%, #C3E4FB 45%, #E7F6FF 100%); }
+body.in-game.skin-forest  { background: linear-gradient(160deg, #E4F1DC 0%, #CBE4C4 55%, #AFD4B0 100%); }
+
+/* —— 设置:皮肤 / 主题选择器 —— */
+.set-title { font-family: var(--font-fun); font-size: 15px; color: #3E3630; margin-bottom: 10px; }
+.set-title small { font-family: 'PingFang SC', system-ui, sans-serif; font-size: 10.5px; color: #A99E93; font-weight: 400; margin-left: 4px; }
+.pick-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.pick { position: relative; border: 2px solid #F0E6DA; background: #FFFDF8; border-radius: 14px; padding: 12px 6px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; min-height: 52px; justify-content: center; transition: transform .12s; }
+.pick:active { transform: scale(.96); }
+.pick.on { border-color: #F6A96B; background: #FFF3E4; box-shadow: 0 0 0 2px #F6A96B inset; }
+.pick.locked { filter: grayscale(.5); opacity: .7; cursor: default; }
+.pick-name { font-family: var(--font-fun); font-size: 12.5px; color: #4A443E; text-align: center; line-height: 1.15; }
+.pick-need { font-size: 9.5px; color: #B3A89E; }
+.pick.skin-kitchen { background: linear-gradient(160deg,#FFF4DC,#F6DDBE); }
+.pick.skin-ranch { background: linear-gradient(160deg,#EAF7D8,#B7E6C4); }
+.pick.skin-bakery { background: linear-gradient(160deg,#FFE9F1,#F6E6D8); }
+.pick.skin-sky { background: linear-gradient(160deg,#D9F0FF,#E7F6FF); }
+.pick.skin-forest { background: linear-gradient(160deg,#E4F1DC,#AFD4B0); }
+.pick.skin-kitchen.locked, .pick.skin-ranch.locked, .pick.skin-bakery.locked, .pick.skin-sky.locked, .pick.skin-forest.locked { background: #F1ECE4; }
+.set-note { font-size: 10.5px; color: #B3A89E; margin-top: 8px; text-align: center; }
+
+/* —— 结算:解锁播报 —— */
+.unlock-box { background: linear-gradient(180deg,#FFF7E8,#FFEFD6); border: 2px dashed #F6C87B; border-radius: 14px; padding: 8px 12px; margin: 4px 0 10px; }
+.unlock-row { font-size: 12.5px; color: #A76B2E; line-height: 1.7; }
+.unlock-row b { font-family: var(--font-fun); color: #E67E22; }

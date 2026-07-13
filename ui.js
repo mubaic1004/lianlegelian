@@ -1,7 +1,7 @@
-// 「炒了个菜」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
+// 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v1.0.0.9'; // 版本规则:每次改动末位 +1,大改动才进主位
+const VERSION = 'v2.0.0.0'; // 大改动:改名胖皮厨房 + 美术接入,主位 +1
 const app = document.getElementById('app');
 
 const store = {
@@ -16,6 +16,30 @@ const iname = type => T(INGREDIENTS[type].name, INGREDIENTS[type].en);
 const rname = ri => T(RECIPES[ri].name, RECIPES[ri].en);
 const lvname = lv => T(LEVELS[lv].name, LEVELS[lv].en);
 const toolName = k => T({ undo: '撤回', shuffle: '洗牌', pop: '弹出' }[k], { undo: 'Undo', shuffle: 'Shuffle', pop: 'Eject' }[k]);
+
+// ———————————— 皮肤 / 卡牌主题(第 5 关通关解锁)————————————
+const SKINS = [
+  { id: 'kitchen', name: '地狱后厨', en: "Hell's Kitchen", need: 0 },
+  { id: 'ranch', name: '牧场时光', en: 'Ranch Time', need: 10 },
+  { id: 'bakery', name: '甜蜜烘焙坊', en: 'Sweet Bakery', need: 20 },
+  { id: 'sky', name: '云端小岛', en: 'Sky Isle', need: 30 },
+  { id: 'forest', name: '森林小屋', en: 'Forest Cabin', need: 40 },
+];
+const THEMES = [
+  { id: 'emoji', name: 'Emoji', en: 'Emoji', need: 0 },
+  { id: 'kitchen', name: '厨房主题', en: 'Kitchen', need: 5 },
+  { id: 'dessert', name: '甜品主题', en: 'Dessert', need: 10 },
+  { id: 'hotpot', name: '火锅主题', en: 'Hotpot', need: 15 },
+  { id: 'forest', name: '森林主题', en: 'Forest', need: 20 },
+];
+let currentSkin = store.get('skin', 'kitchen');
+let currentTheme = store.get('theme', 'emoji');
+const godClears = () => store.get('god', 0);
+const skinUnlocked = s => godClears() >= s.need;
+// 卡牌主题为随机掉落解锁:记录已解锁 id 列表
+function unlockedThemes() { return new Set(['emoji', ...store.get('themesUnlocked', [])]); }
+function hippoSrc(n) { return `assets/hippos/h${String(n).padStart(2, '0')}.png`; }
+
 
 // ———————————— 音频:WebAudio 合成,零外部资源 ————————————
 let actx = null;
@@ -135,7 +159,17 @@ const BGM_BARS = [
 ];
 const ARP_ORDER = [0, 1, 2, 3, 2, 3, 2, 1]; // 竖琴式上下行
 let bgmGain = null, bgmTimer = null;
-function applyBgmVol() { if (bgmGain) bgmGain.gain.value = muted ? 0 : bgmVol * .55; }
+let bgmAudio = {}, curTrack = null;
+function trackForSkin(skinId) { return skinId === 'kitchen' ? 'sunny-kitchen' : 'little-food'; }
+function applyBgmVol() { const a = bgmAudio[curTrack]; if (a) a.volume = muted ? 0 : Math.min(1, bgmVol); }
+function playBGM() {
+  const track = trackForSkin(currentSkin);
+  if (curTrack !== track) { const p = bgmAudio[curTrack]; if (p) p.pause(); }
+  if (!bgmAudio[track]) { const a = new Audio('assets/audio/' + track + '.mp3'); a.loop = true; bgmAudio[track] = a; }
+  curTrack = track;
+  applyBgmVol();
+  if (!muted && bgmVol > 0) bgmAudio[track].play().catch(() => {});
+}
 // 背景柔音符:极缓起 + 缓落(铺底/低音用)
 function bgmNote(f, t, dur, type, g, attack = .04) {
   const ctx = ac();
@@ -182,14 +216,7 @@ function loopBGM() {
   });
   bgmTimer = setTimeout(loopBGM, BGM_BARS.length * barDur * 1000 - 40);
 }
-function startBGM() {
-  if (bgmTimer !== null) return;
-  const ctx = ac();
-  bgmGain = ctx.createGain();
-  applyBgmVol();
-  bgmGain.connect(ctx.destination);
-  loopBGM();
-}
+function startBGM() { playBGM(); }
 
 // ———————————— 通用素材 ————————————
 const TINTS = ['#FFE3EC', '#FFF1D6', '#E3F4FF', '#E8F9E3', '#F3E8FF', '#FFFAD6', '#DFF6F0', '#FFE9DF', '#EBEBFF', '#FFEFF7'];
@@ -237,22 +264,13 @@ function showHome() {
   game = null;
   window.__game = null;
   app.innerHTML = `
-  <div class="screen home menu">
-    <div class="title-wrap">
-      <div class="mascot">🍳</div>
-      <div class="title-art">
-        <h1>${T('炒了个菜', 'Cook-a-Dish')}</h1>
-        <span class="hang hang-berry">🍓</span>
-        <span class="hang hang-ice">🍦</span>
-      </div>
-      <p class="tagline">${T('连连看 × 菜谱合成 · 可爱但不讲武德', 'Link & match × recipes · cute but ruthless')}</p>
-    </div>
-    <button class="menu-btn clay" data-go="play"><span class="mi">🎮</span>${T('开始做菜', 'Play')}</button>
-    <button class="menu-btn clay" data-go="guide"><span class="mi">📖</span>${T('玩法教学', 'How to Play')}</button>
-    <button class="menu-btn clay" data-go="settings"><span class="mi">⚙️</span>${T('设置', 'Settings')}</button>
-    <p class="foot">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
+  <div class="screen home-art">
+    <button class="art-btn" data-go="play" aria-label="${T('开始做菜', 'Play')}"></button>
+    <button class="art-btn" data-go="guide" aria-label="${T('玩法教学', 'How to Play')}"></button>
+    <button class="art-btn" data-go="settings" aria-label="${T('设置', 'Settings')}"></button>
+    <p class="art-ver">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
   </div>`;
-  app.querySelectorAll('.menu-btn').forEach(b => b.addEventListener('click', () => {
+  app.querySelectorAll('.art-btn').forEach(b => b.addEventListener('click', () => {
     sfx.select();
     const go = b.dataset.go;
     if (go === 'play') showLevels();
@@ -328,6 +346,24 @@ function showSettings() {
           <button class="${lang === 'en' ? 'on' : ''}" data-lang="en">English</button>
         </span></div>
     </div>
+    <div class="set-card clay">
+      <div class="set-title">🎨 ${T('游戏皮肤', 'Game Skin')} <small>${T('第 5 关每通关 10 次解锁一款', 'One unlock per 10 clears of Lv5')}</small></div>
+      <div class="pick-grid">${SKINS.map(s => {
+        const ok = skinUnlocked(s);
+        return `<button class="pick skin-${s.id} ${currentSkin === s.id ? 'on' : ''} ${ok ? '' : 'locked'}" data-skin="${s.id}">
+          <span class="pick-name">${ok ? T(s.name, s.en) : '🔒'}</span>
+          ${ok ? '' : `<span class="pick-need">${s.need}${T('次', '×')}</span>`}</button>`;
+      }).join('')}</div>
+    </div>
+    <div class="set-card clay">
+      <div class="set-title">🃏 ${T('卡牌主题', 'Card Theme')} <small>${T('第 5 关每通关 5 次随机掉落一款', 'Random drop per 5 clears of Lv5')}</small></div>
+      <div class="pick-grid">${THEMES.map(t => {
+        const ok = unlockedThemes().has(t.id);
+        return `<button class="pick ${currentTheme === t.id ? 'on' : ''} ${ok ? '' : 'locked'}" data-theme="${t.id}">
+          <span class="pick-name">${ok ? T(t.name, t.en) : '🔒'}</span></button>`;
+      }).join('')}</div>
+      <p class="set-note">${T('卡牌主题美术制作中,当前统一为 Emoji 外观', 'Theme art in progress — tiles currently show Emoji')}</p>
+    </div>
     <p class="foot credits">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}<br>
       <small>${T('用 ❤️ 和 🍚 制作', 'Made with ❤️ and 🍚')}</small></p>
   </div>`;
@@ -348,6 +384,17 @@ function showSettings() {
     store.set('lang', lang);
     sfx.select();
     showSettings();
+  }));
+  app.querySelectorAll('.pick[data-skin]').forEach(b => b.addEventListener('click', () => {
+    const s = SKINS.find(x => x.id === b.dataset.skin);
+    if (!skinUnlocked(s)) { b.classList.add('wobble'); setTimeout(() => b.classList.remove('wobble'), 450); sfx.deny(); return; }
+    currentSkin = s.id; store.set('skin', s.id);
+    sfx.pair(); playBGM(); showSettings();
+  }));
+  app.querySelectorAll('.pick[data-theme]').forEach(b => b.addEventListener('click', () => {
+    if (!unlockedThemes().has(b.dataset.theme)) { b.classList.add('wobble'); setTimeout(() => b.classList.remove('wobble'), 450); sfx.deny(); return; }
+    currentTheme = b.dataset.theme; store.set('theme', b.dataset.theme);
+    sfx.select(); showSettings();
   }));
 }
 
@@ -501,6 +548,8 @@ function startLevel(lv) {
 
 function renderPlay() {
   document.body.classList.add('in-game');
+  document.body.classList.remove('skin-kitchen', 'skin-ranch', 'skin-bakery', 'skin-sky', 'skin-forest');
+  document.body.classList.add('skin-' + currentSkin);
   app.innerHTML = `
   <div class="screen play">
     <div class="topbar">
@@ -637,7 +686,7 @@ function refresh() {
   // 点单栏
   const ordersView = [...game.orders].sort((a, b) => (a.done >= a.need) - (b.done >= b.need)); // 完成的沉底
   app.querySelector('.ob-list').innerHTML = ordersView.map(o =>
-    `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}" data-ri="${o.recipe}" role="button" title="${T('点我看配方', 'Tap for recipe')}">${o.customer}${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
+    `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}" data-ri="${o.recipe}" role="button" title="${T('点我看配方', 'Tap for recipe')}"><img class="cust" src="${hippoSrc(o.customer)}" alt="">${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
   ).join('');
   app.querySelector('.ob-dishes').textContent = game.dishes.length ? `🍽️×${game.dishes.length}` : '';
   // 进度
@@ -771,8 +820,8 @@ function onDish(recipeIdx, fromRect, orderRes) {
     hint(T(`🍳 出菜啦!${INGREDIENTS[r.a].e}+${INGREDIENTS[r.b].e}=${r.e} ${rname(recipeIdx)}!这就是顾客点的菜,点单栏 +1~`,
       `🍳 Dish up! ${INGREDIENTS[r.a].e}+${INGREDIENTS[r.b].e}=${r.e} ${rname(recipeIdx)} — order progress +1!`), 6000);
   } else if (orderRes && orderRes.completed) {
-    hint(T(`${orderRes.order.customer} 顾客满意!${r.e} ${rname(recipeIdx)} 订单完成!`,
-      `${orderRes.order.customer} Happy customer! ${r.e} ${rname(recipeIdx)} order done!`), 2800);
+    hint(T(`😋 顾客满意!${r.e} ${rname(recipeIdx)} 订单完成!`,
+      `😋 Happy customer! ${r.e} ${rname(recipeIdx)} order done!`), 2800);
   } else if (orderRes) {
     hint(`📋 ${r.e} ${rname(recipeIdx)} ${T('出餐', 'served')} ${orderRes.order.done}/${orderRes.order.need}`, 2200);
   } else {
@@ -824,7 +873,22 @@ function useTool(kind) {
 function checkEnd() {
   if (game.status === 'won') {
     if (levelId < 5) store.set('maxLv', Math.max(store.get('maxLv', 1), levelId + 1));
-    else store.set('god', store.get('god', 0) + 1);
+    else {
+      const g = store.get('god', 0) + 1;
+      store.set('god', g);
+      // 皮肤:每 10 次通关按顺序解锁下一款(need 恰为 10/20/30/40)
+      const justSkin = SKINS.find(s => s.need === g);
+      // 卡牌主题:每 5 次通关随机掉落一款尚未解锁的
+      let justTheme = null;
+      if (g % 5 === 0) {
+        const locked = THEMES.filter(t => t.id !== 'emoji' && !unlockedThemes().has(t.id));
+        if (locked.length) {
+          justTheme = locked[Math.floor(Math.random() * locked.length)];
+          store.set('themesUnlocked', [...store.get('themesUnlocked', []), justTheme.id]);
+        }
+      }
+      window.__justUnlock = { skin: justSkin, theme: justTheme };
+    }
     setTimeout(() => { sfx.win(); confetti(); showModal(true); }, 350);
   } else if (game.status === 'lost') {
     setTimeout(() => { sfx.lose(); showModal(false); }, 500);
@@ -880,6 +944,14 @@ function showModal(won) {
             <button class="m-btn ${canRevive ? 'plain' : 'primary'}" data-act="retry">${T('再来一次', 'Try again')}</button>
             <button class="m-btn plain" data-act="home">${T('回首页', 'Home')}</button>`;
   }
+  // 第 5 关通关的解锁播报
+  let unlockBanner = '';
+  const ju = window.__justUnlock;
+  if (won && ju) {
+    if (ju.skin) unlockBanner += `<div class="unlock-row">🎨 ${T('解锁新皮肤', 'New skin')}:<b>${T(ju.skin.name, ju.skin.en)}</b></div>`;
+    if (ju.theme) unlockBanner += `<div class="unlock-row">🃏 ${T('掉落卡牌主题', 'Theme drop')}:<b>${T(ju.theme.name, ju.theme.en)}</b></div>`;
+    window.__justUnlock = null;
+  }
   const overlay = document.createElement('div');
   overlay.className = 'modal-overlay';
   overlay.innerHTML = `
@@ -887,6 +959,7 @@ function showModal(won) {
       <div class="m-mascot">${mascot}</div>
       <h2>${title}</h2>
       <p class="m-line">${line}</p>
+      ${unlockBanner ? `<div class="unlock-box">${unlockBanner}</div>` : ''}
       <p class="m-stats">${T('点单', 'Orders')} ${game.orders.filter(o => o.done >= o.need).length}/${game.orders.length} · ${T('消除', 'Cleared')} ${done}/${game.total}${dishStat} · ${secs}s · ${T(`第 ${att[levelId] || 1} 次挑战`, `attempt ${att[levelId] || 1}`)}</p>
       ${btns}
     </div>`;

@@ -160,7 +160,7 @@ function evenCounts(total, k) {
   return counts;
 }
 
-const CUSTOMERS = ['🐰', '🐱', '🐻', '🐶', '🦊', '🐼', '🐹', '🐨'];
+const HIPPO_COUNT = 20; // 胖皮造型数量,客人随机选用
 
 export function buildLevel(levelId, seed) {
   const cfg = LEVELS[levelId];
@@ -188,7 +188,7 @@ export function buildLevel(levelId, seed) {
   game.orders = avail.slice(0, cfg.orders).map(ri => {
     const maxDish = Math.min(cnt[RECIPES[ri].a], cnt[RECIPES[ri].b]);
     const need = Math.min(maxDish, rng() < 0.2 + levelId * 0.12 ? 2 : 1);
-    return { recipe: ri, need, done: 0, customer: CUSTOMERS[Math.floor(rng() * CUSTOMERS.length)] };
+    return { recipe: ri, need, done: 0, customer: 1 + Math.floor(rng() * HIPPO_COUNT) };
   });
   return game;
 }
