@@ -1,7 +1,7 @@
 // 「炒了个菜」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v1.0.0.4'; // 版本规则:每次改动末位 +1,大改动才进主位
+const VERSION = 'v1.0.0.5'; // 版本规则:每次改动末位 +1,大改动才进主位
 const app = document.getElementById('app');
 
 const store = {
@@ -83,26 +83,60 @@ const sfx = {
   win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .16, 'triangle', .12, i * .09)); },
 };
 
-// —— 背景音乐:梦幻柔美的循环小曲(参考奇迹暖暖式配器)——
-// 三个声部叠加,绝非单音:①和弦铺底(pad)②竖琴式分解和弦琶音 ③稀疏的柔旋律
-// I–V–vi–IV 梦幻进行,音符全部缓起缓落,无尖锐瞬态
-const BGM_STEP = .27; // 八分音符,约 111 BPM,舒缓
+// —— 背景音乐:约 1 分钟的梦幻钢琴小曲循环(参考奇迹暖暖式配器)——
+// 背景:极轻的和弦铺底 + 低音(sine,缓起缓落);前景:钢琴音色的琶音与旋律
+// 结构:4 小节前奏 + A 段(8)+ B 段(8)+ A' 段(8),共 28 小节 ≈ 60 秒
+const BGM_STEP = .27; // 八分音符,约 111 BPM
 const NOTE = {
-  A2: 110, C3: 130.81, E3: 164.81, F3: 174.61, G3: 196, A3: 220, B3: 246.94,
+  A2: 110, C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196, A3: 220, B3: 246.94,
   C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392, A4: 440, B4: 493.88,
   C5: 523.25, D5: 587.33, E5: 659.25, F5: 698.46, G5: 783.99, A5: 880, B5: 987.77, C6: 1046.5,
 };
-// 每小节 8 步:和弦音(pad)、低音、琶音音级、旋律 [起步, 音名, 时值(步)]
+// 和弦库:铺底音、低音、琶音音级
+const CHORDS = {
+  C: { pad: ['C4', 'E4', 'G4'], bass: 'C3', arp: ['C4', 'E4', 'G4', 'C5'] },
+  G: { pad: ['B3', 'D4', 'G4'], bass: 'G3', arp: ['G3', 'B3', 'D4', 'G4'] },
+  Am: { pad: ['A3', 'C4', 'E4'], bass: 'A2', arp: ['A3', 'C4', 'E4', 'A4'] },
+  F: { pad: ['A3', 'C4', 'F4'], bass: 'F3', arp: ['F3', 'A3', 'C4', 'F4'] },
+  Dm: { pad: ['A3', 'D4', 'F4'], bass: 'D3', arp: ['D3', 'F3', 'A3', 'D4'] },
+  Em: { pad: ['B3', 'E4', 'G4'], bass: 'E3', arp: ['E3', 'G3', 'B3', 'E4'] },
+};
+const bar = (ch, mel = []) => ({ ...CHORDS[ch], mel }); // mel: [起步, 音名, 时值(步)]
 const BGM_BARS = [
-  { pad: ['C4', 'E4', 'G4'], bass: 'C3', arp: ['C4', 'E4', 'G4', 'C5'], mel: [[0, 'E5', 3], [4, 'G5', 2], [6, 'A5', 2]] },
-  { pad: ['B3', 'D4', 'G4'], bass: 'G3', arp: ['G3', 'B3', 'D4', 'G4'], mel: [[0, 'G5', 3], [4, 'D5', 4]] },
-  { pad: ['A3', 'C4', 'E4'], bass: 'A2', arp: ['A3', 'C4', 'E4', 'A4'], mel: [[0, 'C5', 2], [2, 'E5', 2], [4, 'D5', 4]] },
-  { pad: ['A3', 'C4', 'F4'], bass: 'F3', arp: ['F3', 'A3', 'C4', 'F4'], mel: [[0, 'A4', 2], [2, 'G4', 2], [4, 'C5', 4]] },
+  // 前奏(只有铺底+琶音,末尾引出旋律)
+  bar('C'), bar('F'), bar('C'), bar('G', [[4, 'D5', 2], [6, 'E5', 2]]),
+  // A 段
+  bar('C', [[0, 'E5', 3], [4, 'G5', 2], [6, 'A5', 2]]),
+  bar('G', [[0, 'B5', 3], [4, 'G5', 4]]),
+  bar('Am', [[0, 'A5', 2], [2, 'G5', 2], [4, 'E5', 4]]),
+  bar('F', [[0, 'F5', 3], [4, 'G5', 2], [6, 'A5', 2]]),
+  bar('C', [[0, 'G5', 3], [4, 'E5', 2], [6, 'D5', 2]]),
+  bar('G', [[0, 'D5', 3], [4, 'B4', 4]]),
+  bar('F', [[0, 'C5', 2], [2, 'D5', 2], [4, 'F5', 4]]),
+  bar('C', [[0, 'E5', 6]]),
+  // B 段(情绪轻轻扬起)
+  bar('F', [[0, 'A5', 2], [2, 'G5', 2], [4, 'F5', 3]]),
+  bar('G', [[0, 'G5', 2], [2, 'A5', 2], [4, 'B5', 3]]),
+  bar('Em', [[0, 'G5', 3], [4, 'E5', 2], [6, 'D5', 2]]),
+  bar('Am', [[0, 'C5', 2], [2, 'E5', 2], [4, 'A5', 4]]),
+  bar('F', [[0, 'F5', 2], [2, 'E5', 2], [4, 'D5', 3]]),
+  bar('G', [[0, 'D5', 2], [2, 'E5', 2], [4, 'G5', 3]]),
+  bar('C', [[0, 'E5', 3], [4, 'C5', 4]]),
+  bar('C', [[0, 'C5', 6]]),
+  // A' 段(收束)
+  bar('C', [[0, 'E5', 3], [4, 'G5', 2], [6, 'A5', 2]]),
+  bar('G', [[0, 'B5', 3], [4, 'A5', 2], [6, 'G5', 2]]),
+  bar('Am', [[0, 'A5', 2], [2, 'E5', 2], [4, 'C5', 4]]),
+  bar('F', [[0, 'F5', 3], [4, 'A5', 3]]),
+  bar('Dm', [[0, 'D5', 2], [2, 'F5', 2], [4, 'A5', 3]]),
+  bar('G', [[0, 'G5', 2], [2, 'F5', 2], [4, 'D5', 3]]),
+  bar('C', [[0, 'E5', 2], [2, 'D5', 2], [4, 'C5', 4]]),
+  bar('C', [[0, 'C5', 7]]),
 ];
 const ARP_ORDER = [0, 1, 2, 3, 2, 3, 2, 1]; // 竖琴式上下行
 let bgmGain = null, bgmTimer = null;
 function applyBgmVol() { if (bgmGain) bgmGain.gain.value = muted ? 0 : bgmVol * .55; }
-// 缓起(attack)+ 缓落的柔音符
+// 背景柔音符:极缓起 + 缓落(铺底/低音用)
 function bgmNote(f, t, dur, type, g, attack = .04) {
   const ctx = ac();
   const o = ctx.createOscillator(), gn = ctx.createGain();
@@ -113,19 +147,37 @@ function bgmNote(f, t, dur, type, g, attack = .04) {
   o.connect(gn).connect(bgmGain);
   o.start(t); o.stop(t + dur + .03);
 }
+// 钢琴音色:琴槌式快起音 + 基频与 2/3 次泛音叠加(轻微失谐)+ 自然衰减
+function pianoNote(f, t, dur, g) {
+  const ctx = ac();
+  const gn = ctx.createGain();
+  gn.gain.setValueAtTime(.0001, t);
+  gn.gain.linearRampToValueAtTime(g, t + .012);
+  gn.gain.exponentialRampToValueAtTime(.001, t + dur);
+  gn.connect(bgmGain);
+  [[1, 1, 'triangle'], [2, .35, 'sine'], [3, .12, 'sine']].forEach(([h, hg, type]) => {
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.value = f * h * (1 + h * .0006);
+    const og = ctx.createGain();
+    og.gain.value = hg;
+    o.connect(og).connect(gn);
+    o.start(t); o.stop(t + dur + .05);
+  });
+}
 function loopBGM() {
   const ctx = ac();
   const t0 = ctx.currentTime + .06;
   const barDur = 8 * BGM_STEP;
-  BGM_BARS.forEach((bar, bi) => {
+  BGM_BARS.forEach((b, bi) => {
     const bt = t0 + bi * barDur;
-    bar.pad.forEach(n => bgmNote(NOTE[n], bt, barDur * .96, 'sine', .022, .3)); // 和弦铺底,极缓起
-    bgmNote(NOTE[bar.bass], bt, barDur * .9, 'sine', .045, .12);                 // 低音
-    ARP_ORDER.forEach((ai, si) => {                                              // 竖琴琶音
-      bgmNote(NOTE[bar.arp[ai]], bt + si * BGM_STEP, BGM_STEP * 1.6, 'triangle', .026, .02);
+    b.pad.forEach(n => bgmNote(NOTE[n], bt, barDur * .96, 'sine', .011, .5)); // 铺底更轻更缓
+    bgmNote(NOTE[b.bass], bt, barDur * .9, 'sine', .032, .15);                 // 低音
+    ARP_ORDER.forEach((ai, si) => {                                            // 钢琴琶音
+      pianoNote(NOTE[b.arp[ai]], bt + si * BGM_STEP, BGM_STEP * 2.2, .016);
     });
-    bar.mel.forEach(([s, n, len]) => {                                           // 柔旋律
-      bgmNote(NOTE[n], bt + s * BGM_STEP, len * BGM_STEP * 1.05, 'sine', .05, .07);
+    b.mel.forEach(([s, n, len]) => {                                           // 钢琴旋律
+      pianoNote(NOTE[n], bt + s * BGM_STEP, len * BGM_STEP * 1.4, .05);
     });
   });
   bgmTimer = setTimeout(loopBGM, BGM_BARS.length * barDur * 1000 - 40);
