@@ -1,8 +1,13 @@
 /* 「连了个连」 —— 黏土拟物可爱风 */
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
+:root {
+  /* 艺术字(标题/按钮):站酷庆科黄油体 —— 圆润粗线条,可爱且清晰 */
+  --font-fun: 'ZCOOL QingKe HuangYou', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', ui-rounded, sans-serif;
+}
 body {
-  font-family: 'ZCOOL KuaiLe', 'Yuanti SC', 'YouYuan', '幼圆', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-rounded, system-ui, sans-serif;
+  /* 正文/说明小字:清晰的系统圆体 */
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', ui-rounded, system-ui, sans-serif;
   /* 奶油黄→樱花粉→薄荷绿,叠白色波点 —— 参考肥鹅健身房的暖调卡通背景 */
   background:
     radial-gradient(rgba(255, 255, 255, .4) 13%, transparent 14%) 0 0 / 48px 48px,
@@ -210,6 +215,18 @@ button { font-family: inherit; }
 .confetti { position: fixed; top: -16px; z-index: 1100; width: 10px; height: 14px; border-radius: 3px; pointer-events: none; animation-name: confFall; animation-timing-function: linear; animation-fill-mode: forwards; }
 @keyframes confFall { to { transform: translateY(112vh) rotate(720deg); } }
 @keyframes floaty { 50% { transform: translateY(-8px); } }
+
+/* 艺术字应用面:大标题、按钮、关卡名等展示性文字;说明小字保持系统字体 */
+h1, h2, .menu-btn, .lv-name, .lv-info b, .lv-rate, .m-btn, .g-btn, .g-skip,
+.tool span, .seg button, .ob-label, .progress-num, .progress-time, .tagline, .g-art i {
+  font-family: var(--font-fun);
+  font-weight: 400;
+}
+.home h1 { letter-spacing: 6px; }
+
+.progress-time { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #BE185D; }
+.progress-time.urgent { color: #DC2626; animation: urgentBlink .6s infinite; }
+@keyframes urgentBlink { 50% { opacity: .35; } }
 
 button:focus-visible { outline: 3px solid #F472B6; outline-offset: 2px; }
 

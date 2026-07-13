@@ -79,7 +79,7 @@ export const LEVELS = {
   1: {
     name: '第 1 关 · 开火热灶', en: 'Level 1 · Light the Stove',
     typeList: [...R(0), ...R(1), ...R(4)], // 3 道菜谱,6 种食材
-    orders: 2, fresh: 24,
+    orders: 2, fresh: 24, time: 120,
     seeds: [7],
     layout() {
       return [
@@ -92,7 +92,7 @@ export const LEVELS = {
   2: {
     name: '第 2 关 · 小试牛刀', en: 'Level 2 · First Chops',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS.slice(0, 6)], // 4 菜谱 + 6 散装
-    orders: 3, fresh: 22,
+    orders: 3, fresh: 22, time: 180,
     seeds: [31, 38, 36, 10, 8, 30, 4, 18, 1], // bot 实测 55%~72%
     layout() {
       const pos = [];
@@ -106,7 +106,7 @@ export const LEVELS = {
   3: {
     name: '第 3 关 · 渐入佳境', en: 'Level 3 · On a Roll',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...LONERS], // 4 菜谱 + 12 散装
-    orders: 4, fresh: 20,
+    orders: 4, fresh: 20, time: 240,
     seeds: [35, 7, 40, 36, 14, 8, 28], // bot 实测 10%~16%
     layout() {
       const pos = [];
@@ -120,7 +120,7 @@ export const LEVELS = {
   4: {
     name: "第 4 关 · 地狱后厨", en: "Level 4 · Hell's Kitchen",
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...LONERS.slice(0, 10)], // 6 菜谱 + 10 散装
-    orders: 5, fresh: 18,
+    orders: 5, fresh: 18, time: 300,
     seeds: [40, 12, 24, 1, 4, 8, 28, 36, 41, 43], // bot 实测 1%~4%
     layout() {
       const pos = [];
@@ -135,7 +135,7 @@ export const LEVELS = {
   5: {
     name: '第 5 关 · 传说灶神', en: 'Level 5 · Kitchen God',
     typeList: [...R(0), ...R(1), ...R(2), ...R(3), ...R(4), ...R(5), ...R(6), ...R(7), ...LONERS], // 8 菜谱 + 12 散装
-    orders: 6, fresh: 19,
+    orders: 6, fresh: 19, time: 300,
     seeds: [6, 17, 19, 30, 31, 58, 70, 51, 7, 11, 60, 64], // bot 实测 0.3%~1.7%,均 ≥1 胜确认有解
     layout() {
       const pos = [];
@@ -396,6 +396,13 @@ export class Game {
       this.loseReason = 'slot';
     }
     return { paired: false, recipe: null, order: null };
+  }
+
+  // 限时到点:判负(由界面层的倒计时调用)
+  timeUp() {
+    if (this.status !== 'playing') return;
+    this.status = 'lost';
+    this.loseReason = 'time';
   }
 
   shuffle(rng) {

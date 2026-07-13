@@ -1,7 +1,7 @@
 // 「炒了个菜」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v1.0.0.5'; // 版本规则:每次改动末位 +1,大改动才进主位
+const VERSION = 'v1.0.0.6'; // 版本规则:每次改动末位 +1,大改动才进主位
 const app = document.getElementById('app');
 
 const store = {
@@ -147,18 +147,18 @@ function bgmNote(f, t, dur, type, g, attack = .04) {
   o.connect(gn).connect(bgmGain);
   o.start(t); o.stop(t + dur + .03);
 }
-// 钢琴音色:琴槌式快起音 + 基频与 2/3 次泛音叠加(轻微失谐)+ 自然衰减
-function pianoNote(f, t, dur, g) {
+// 竖琴音色:纯正弦基频 + 一点点八度泛音,柔和拨弦起音,自然衰减(无刺耳谐波)
+function harpNote(f, t, dur, g) {
   const ctx = ac();
   const gn = ctx.createGain();
   gn.gain.setValueAtTime(.0001, t);
-  gn.gain.linearRampToValueAtTime(g, t + .012);
+  gn.gain.linearRampToValueAtTime(g, t + .018);
   gn.gain.exponentialRampToValueAtTime(.001, t + dur);
   gn.connect(bgmGain);
-  [[1, 1, 'triangle'], [2, .35, 'sine'], [3, .12, 'sine']].forEach(([h, hg, type]) => {
+  [[1, 1], [2, .12]].forEach(([h, hg]) => {
     const o = ctx.createOscillator();
-    o.type = type;
-    o.frequency.value = f * h * (1 + h * .0006);
+    o.type = 'sine';
+    o.frequency.value = f * h;
     const og = ctx.createGain();
     og.gain.value = hg;
     o.connect(og).connect(gn);
@@ -174,10 +174,10 @@ function loopBGM() {
     b.pad.forEach(n => bgmNote(NOTE[n], bt, barDur * .96, 'sine', .011, .5)); // 铺底更轻更缓
     bgmNote(NOTE[b.bass], bt, barDur * .9, 'sine', .032, .15);                 // 低音
     ARP_ORDER.forEach((ai, si) => {                                            // 钢琴琶音
-      pianoNote(NOTE[b.arp[ai]], bt + si * BGM_STEP, BGM_STEP * 2.2, .016);
+      harpNote(NOTE[b.arp[ai]], bt + si * BGM_STEP, BGM_STEP * 2.4, .014);
     });
     b.mel.forEach(([s, n, len]) => {                                           // 钢琴旋律
-      pianoNote(NOTE[n], bt + s * BGM_STEP, len * BGM_STEP * 1.4, .05);
+      harpNote(NOTE[n], bt + s * BGM_STEP, len * BGM_STEP * 1.5, .048);
     });
   });
   bgmTimer = setTimeout(loopBGM, BGM_BARS.length * barDur * 1000 - 40);
@@ -223,6 +223,8 @@ let startTime = 0;
 let tileEls = new Map();
 let boardEl = null, svgEl = null, slotCellEls = [];
 let hintTimer = null;
+let levelTimer = null;
+let deadline = 0;
 let busy = false; // 入槽飞行动画期间锁输入,避免连点竞态
 let rewardedDishes = 0;
 const tutDone = {};
@@ -230,6 +232,7 @@ const toolRng = mulberry32((Date.now() % 2147483647) || 1);
 
 // ———————————— 首页(主菜单) ————————————
 function showHome() {
+  clearInterval(levelTimer);
   document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
@@ -256,6 +259,7 @@ function showHome() {
 
 // ———————————— 选关页 ————————————
 function showLevels() {
+  clearInterval(levelTimer);
   document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
@@ -266,7 +270,7 @@ function showLevels() {
     const locked = lv > maxLv;
     const sub = locked
       ? T(`通过第 ${lv - 1} 关解锁`, `Clear level ${lv - 1} to unlock`)
-      : (att[lv] ? `${m.blurb()} · ${T(`已阵亡 ${att[lv]} 次`, `${att[lv]} wipes`)}` : m.blurb());
+      : `${att[lv] ? `${m.blurb()} · ${T(`已阵亡 ${att[lv]} 次`, `${att[lv]} wipes`)}` : m.blurb()} · ⏱ ${Math.round(LEVELS[lv].time / 60)}${T(' 分钟', ' min')}`;
     return `<button class="lv-card clay ${locked ? 'locked' : ''}" data-lv="${lv}">
       <span class="lv-emoji">${locked ? '🔒' : m.icon}</span>
       <span class="lv-info"><b>${lvname(lv)}</b><small>${sub}</small></span>
@@ -298,6 +302,7 @@ function showLevels() {
 
 // ———————————— 设置页 ————————————
 function showSettings() {
+  clearInterval(levelTimer);
   document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
@@ -376,6 +381,7 @@ function guideSteps() {
 let guideIdx = 0, guideClone = null;
 
 function showInstructions() {
+  clearInterval(levelTimer);
   document.body.classList.add('in-game');
   game = null;
   window.__game = null;
@@ -469,6 +475,9 @@ function startLevel(lv) {
   busy = false;
   rewardedDishes = 0;
   startTime = Date.now();
+  clearInterval(levelTimer);
+  deadline = startTime + (cfg.time || 300) * 1000;
+  levelTimer = setInterval(tickClock, 250);
   const att = store.get('att', {});
   att[lv] = (att[lv] || 0) + 1;
   store.set('att', att);
@@ -497,7 +506,7 @@ function renderPlay() {
       <button class="icon-btn" id="btn-mute" aria-label="${T('声音开关', 'Toggle sound')}">${muted ? ICONS.mutedIcon : ICONS.sound}</button>
     </div>
     <div class="orderbar"><span class="ob-label">📋 ${T('点单', 'Orders')}</span><div class="ob-list"></div><span class="ob-dishes"></span></div>
-    <div class="progress"><div class="progress-fill"></div><span class="progress-num"></span></div>
+    <div class="progress"><div class="progress-fill"></div><span class="progress-time">⏱</span><span class="progress-num"></span></div>
     <div class="board-wrap"><div class="board"><svg class="linksvg"></svg></div></div>
     <div class="tools">
       <button class="tool" data-tool="undo">${ICONS.undo}<span>${toolName('undo')}</span><i class="badge"></i></button>
@@ -560,6 +569,23 @@ function buildTiles() {
   }
 }
 
+// 倒计时:更新显示;到点判负
+function tickClock() {
+  if (!game || game.status !== 'playing') { clearInterval(levelTimer); return; }
+  const el = app.querySelector('.progress-time');
+  if (!el) return;
+  const left = Math.max(0, deadline - Date.now());
+  const s = Math.ceil(left / 1000);
+  el.textContent = `⏱ ${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  el.classList.toggle('urgent', left <= 30000);
+  if (left <= 0) {
+    clearInterval(levelTimer);
+    game.timeUp();
+    refresh();
+    checkEnd();
+  }
+}
+
 // ———————————— 渲染 ————————————
 function refresh() {
   if (!game) return;
@@ -605,7 +631,8 @@ function refresh() {
       <i class="fresh" style="width:${Math.round(pct * 100)}%;background:${pct > .5 ? '#6EE7B7' : pct > .25 ? '#FCD34D' : '#FB7185'}"></i></div>`;
   });
   // 点单栏
-  app.querySelector('.ob-list').innerHTML = game.orders.map(o =>
+  const ordersView = [...game.orders].sort((a, b) => (a.done >= a.need) - (b.done >= b.need)); // 完成的沉底
+  app.querySelector('.ob-list').innerHTML = ordersView.map(o =>
     `<span class="ob-chip ${o.done >= o.need ? 'done' : ''}" data-ri="${o.recipe}" role="button" title="${T('点我看配方', 'Tap for recipe')}">${o.customer}${RECIPES[o.recipe].e}<b>${o.done}/${o.need}</b></span>`
   ).join('');
   app.querySelector('.ob-dishes').textContent = game.dishes.length ? `🍽️×${game.dishes.length}` : '';
@@ -804,18 +831,21 @@ function showModal(won) {
   const secs = Math.round((Date.now() - startTime) / 1000);
   const done = game.clearedCount();
   const att = store.get('att', {});
-  const canRevive = !won && game.snapshot && tools.undo > 0;
+  const canRevive = !won && game.snapshot && tools.undo > 0 && game.loseReason !== 'time'; // 超时无法靠撤回复活
   const dishStat = game.dishes.length ? ` · ${T('出品', 'dishes')} ${game.dishes.length}` : '';
   const loseInfo = {
     slot: { mascot: '😿', title: T('备菜槽满了…', 'Hold is full…') },
     spoil: { mascot: '🤢', title: T('食材变质了…', 'Food went bad…') },
     orders: { mascot: '😭', title: T('顾客没吃上…', 'Customers left hungry…') },
+    time: { mascot: '⏰', title: T('时间到了…', "Time's up…") },
   };
   const loseTips = {
     spoil: T('食材在备菜槽里每走一步掉 1 格新鲜度,归零就坏——快满时用「弹出」把老食材送回牌面能重置新鲜度!',
       'Held food loses 1 freshness per move. Use “Eject” to send old tiles back and reset freshness!'),
     orders: T('食材都用完了,点单还没出齐——同款配对会吃掉菜谱食材,记得给顾客的菜留材料!',
       'Out of ingredients with orders unfinished — same-kind pairs eat recipe materials, save some for orders!'),
+    time: T(`这关限时 ${Math.round(LEVELS[levelId].time / 60)} 分钟——下一把手速快一点,少纠结~`,
+      `This level has a ${Math.round(LEVELS[levelId].time / 60)}-minute limit — play faster, hesitate less!`),
   };
   const loseLines = [
     T('后厨爆单,备菜槽全满了…', 'Kitchen slammed — hold is packed…'),
