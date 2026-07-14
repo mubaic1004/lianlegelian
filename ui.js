@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.6'; // 选关栏紧凑排列 + 小河马右移
+const VERSION = 'v2.0.0.7'; // 选关栏紧凑排列 + 小河马右移
 const app = document.getElementById('app');
 
 const store = {
@@ -35,7 +35,7 @@ const THEMES = [
 let currentSkin = store.get('skin', 'kitchen');
 let currentTheme = store.get('theme', 'emoji');
 const godClears = () => store.get('god', 0);
-const skinUnlocked = s => godClears() >= s.need;
+const skinUnlocked = s => true; // ⚠️临时全解锁(检查页面用),恢复为: godClears() >= s.need
 // 卡牌主题为随机掉落解锁:记录已解锁 id 列表
 function unlockedThemes() { return new Set(['emoji', ...store.get('themesUnlocked', [])]); }
 function hippoSrc(n) { return `assets/hippos/h${String(n).padStart(2, '0')}.png`; }
@@ -417,7 +417,6 @@ function showInstructions() {
   app.innerHTML = `
   <div class="screen tut">
     <div class="tut-stage"></div>
-    <img class="tut-signboard" src="assets/ui/lvsel-hippo.png" alt="">
     <button class="g-skip">${T('跳过', 'Skip')}</button>
     <div class="g-nav">
       <button class="g-btn" id="g-prev">←</button>
@@ -445,6 +444,7 @@ function guideStep(i) {
       <h3 class="tut-title">${p.title}</h3>
       <div class="tut-art">${p.art}</div>
       <p class="tut-text">${p.text}</p>
+      <img class="tut-hippo2" src="assets/ui/lvsel-hippo.png" alt="">
     </div>`;
   app.querySelectorAll('.g-dots i').forEach((d, di) => d.classList.toggle('on', di === i));
   app.querySelector('#g-prev').disabled = i === 0;
