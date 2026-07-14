@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.3'; // 封面标题位置取中间值
+const VERSION = 'v2.0.0.4'; // BGM 加载即播 + 选关页新素材
 const app = document.getElementById('app');
 
 const store = {
@@ -295,30 +295,29 @@ function showLevels() {
     const m = LEVEL_META[lv];
     const locked = lv > maxLv;
     const mins = Math.round(LEVELS[lv].time / 60);
-    const sub = locked
-      ? T(`通过第 ${lv - 1} 关解锁`, `Clear Lv ${lv - 1} to unlock`)
-      : m.blurb();
-    const stat = locked ? '' : `${att[lv] ? T(`已阵亡 ${att[lv]} 次`, `${att[lv]} wipes`) + ' · ' : ''}${mins}${T(' 分钟', ' min')}`;
-    return `<button class="lvc ${m.tone} ${locked ? 'locked' : ''}" data-lv="${lv}">
-      <span class="lvc-badge">${locked ? '🔒' : lv}<em class="lvc-icon">${m.icon}</em></span>
-      <span class="lvc-mid"><b>${lvname(lv)}</b><small>${sub}</small><small class="lvc-stat">${stat}</small></span>
-      <span class="lvc-right"><span class="lvc-timer">⏱</span><span class="lvc-rate ${m.cls}">${T('通过率 ', '')}${m.rate()}</span></span>
+    const sub = locked ? T(`通过第 ${lv - 1} 关解锁`, `Clear Lv ${lv - 1} to unlock`) : m.blurb();
+    const stat = locked ? '' : `${att[lv] ? T(`已阵亡 ${att[lv]} 次 · `, `${att[lv]} wipes · `) : ''}${mins}${T(' 分钟', ' min')}`;
+    return `<button class="lc ${locked ? 'locked' : ''}" data-lv="${lv}">
+      <img class="lc-bg" src="assets/ui/lvbar-${lv}.png" alt="">
+      <span class="lc-name">${lvname(lv)}</span>
+      <span class="lc-sub">${sub}</span>
+      <span class="lc-stat">${stat}</span>
+      ${locked ? '' : `<span class="lc-timer">⏱</span><span class="lc-rate ${m.cls}"><i>${T('通过率', 'Clear')}</i><b>${m.rate()}</b></span>`}
+      ${locked ? '<span class="lc-lock">🔒</span>' : ''}
     </button>`;
   }).join('');
   app.innerHTML = `
-  <div class="screen lvsel">
-    <div class="lvsel-top">
-      <button class="icon-btn" id="btn-back" aria-label="${T('返回', 'Back')}">${ICONS.back}</button>
-      <div class="lvsel-title">${T('选择关卡', 'Select Level')}</div>
-      <button class="icon-btn" id="btn-set" aria-label="${T('设置', 'Settings')}">⚙️</button>
-    </div>
-    <div class="lvsel-list">${cards}</div>
-    <p class="lvsel-foot">${T('难度经数万局机器人实测校准,每一局都保证有解 🫡', 'Tuned with 10k+ bot runs — every deal is solvable 🫡')}</p>
-    <img class="lvsel-hippo" src="${hippoSrc(1)}" alt="">
+  <div class="screen lvsel2">
+    <img class="lvsel2-title" src="assets/ui/lvsel-title.png" alt="${T('选择关卡', 'Select Level')}">
+    <button class="lvsel2-back" id="btn-back" aria-label="${T('返回', 'Back')}"><img src="assets/ui/lvsel-back.png" alt=""></button>
+    <button class="lvsel2-set" id="btn-set" aria-label="${T('设置', 'Settings')}"><img src="assets/ui/icon-settings.png" alt=""></button>
+    <div class="lvsel2-list">${cards}</div>
+    <img class="lvsel2-hippo" src="assets/ui/lvsel-hippo.png" alt="">
+    <p class="lvsel2-foot">${T('难度经数万局机器人实测校准,每一局都保证有解 🫡', 'Tuned with 10k+ bot runs — every deal is solvable 🫡')}</p>
   </div>`;
   app.querySelector('#btn-back').addEventListener('click', () => { sfx.select(); showHome(); });
   app.querySelector('#btn-set').addEventListener('click', () => { sfx.select(); showSettings(); });
-  app.querySelectorAll('.lvc').forEach(b => b.addEventListener('click', () => {
+  app.querySelectorAll('.lc').forEach(b => b.addEventListener('click', () => {
     const lv = +b.dataset.lv;
     if (lv > store.get('maxLv', 1)) {
       b.classList.add('wobble');
@@ -326,6 +325,7 @@ function showLevels() {
       sfx.deny();
       return;
     }
+    sfx.select();
     startLevel(lv);
   }));
 }
@@ -979,5 +979,8 @@ function tut(evt, text) {
 })();
 
 window.addEventListener('resize', () => { if (game) { layoutBoard(); refresh(); } });
-document.addEventListener('pointerdown', () => { ac(); startBGM(); }, { once: true });
 showHome();
+// 首页加载即尝试自动播放 BGM;若被浏览器策略拦截,首次交互时补播
+startBGM();
+['pointerdown', 'keydown', 'click', 'touchstart'].forEach(ev =>
+  document.addEventListener(ev, () => startBGM(), { once: true }));
