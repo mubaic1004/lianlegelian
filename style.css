@@ -22,15 +22,13 @@ body {
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
-}
-body.in-game {
-  background: linear-gradient(160deg, #FFF4DC 0%, #FFE9F1 55%, #E7F8EF 100%);
+  display: flex; align-items: center; justify-content: center;
 }
 #bg-deco { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .deco { position: absolute; opacity: .55; animation: decoFloat ease-in-out infinite alternate; filter: drop-shadow(0 4px 6px rgba(180, 110, 60, .15)); }
 body.in-game .deco { display: none; }
 @keyframes decoFloat { to { transform: translateY(-20px) rotate(7deg); } }
-#app { position: relative; z-index: 1; height: 100dvh; max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
+#app { position: relative; z-index: 1; width: min(100vw, calc(100dvh * 9 / 16)); height: 100dvh; container-type: size; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(120, 80, 40, .22); }
 .screen { flex: 1; display: flex; flex-direction: column; min-height: 0; }
 button { font-family: inherit; }
 
@@ -110,7 +108,7 @@ button { font-family: inherit; }
 .g-mask { position: fixed; inset: 0; z-index: 2000; background: rgba(70, 35, 70, .45); backdrop-filter: grayscale(1) brightness(.62); animation: fadeIn .3s; }
 .g-spot { z-index: 2100 !important; animation: spotPulse 1.6s ease-in-out infinite; border-radius: 18px; box-shadow: 0 0 0 4px #fff, 0 0 44px rgba(255, 240, 250, .8); background: #FFF6FB; pointer-events: none; }
 @keyframes spotPulse { 0%, 100% { transform: scale(var(--gs, 1.12)); } 50% { transform: scale(calc(var(--gs, 1.12) + .05)); } }
-.g-caption { position: fixed; left: 50%; transform: translateX(-50%); z-index: 2200; width: min(86vw, 340px); text-align: center; padding: 16px 14px 14px; animation: riseIn .3s ease-out; background: linear-gradient(180deg, #FFFEFE, #FFF3F9); }
+.g-caption { position: fixed; left: 50%; transform: translateX(-50%); z-index: 2200; width: min(86cqw, 340px); text-align: center; padding: 16px 14px 14px; animation: riseIn .3s ease-out; background: linear-gradient(180deg, #FFFEFE, #FFF3F9); }
 .g-art { font-size: 34px; letter-spacing: 3px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 7px; }
 .g-art i { font-style: normal; font-size: 17px; color: #C9A8D4; font-weight: 800; }
 .ga-gold { filter: drop-shadow(0 0 6px #FCD34D); }
@@ -203,14 +201,14 @@ button { font-family: inherit; }
 
 .ghost-tile { position: fixed; z-index: 990; border-radius: 24%; display: grid; place-items: center; transition: transform .28s cubic-bezier(.45, 1.4, .4, 1); box-shadow: 0 6px 14px rgba(236, 72, 153, .3); pointer-events: none; }
 
-.hintbar { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); width: max-content; max-width: 82vw; z-index: 950; background: #fff; border: 3px solid #FBCFE8; color: #BE185D; font-size: 13px; font-weight: 600; line-height: 1.5; padding: 10px 16px; border-radius: 18px; box-shadow: 0 8px 18px rgba(236, 72, 153, .22); animation: riseIn .25s ease-out; }
+.hintbar { position: fixed; left: 50%; bottom: 118px; transform: translateX(-50%); width: max-content; max-width: 82cqw; z-index: 950; background: #fff; border: 3px solid #FBCFE8; color: #BE185D; font-size: 13px; font-weight: 600; line-height: 1.5; padding: 10px 16px; border-radius: 18px; box-shadow: 0 8px 18px rgba(236, 72, 153, .22); animation: riseIn .25s ease-out; }
 @keyframes riseIn { from { opacity: 0; transform: translate(-50%, 8px); } }
 
 .star { position: fixed; z-index: 995; pointer-events: none; font-size: 15px; animation: burst .55s ease-out forwards; }
 @keyframes burst { to { transform: translate(var(--dx), var(--dy)) scale(.3) rotate(60deg); opacity: 0; } }
 
 .modal-overlay { position: fixed; inset: 0; z-index: 1000; background: rgba(90, 40, 80, .5); backdrop-filter: blur(6px); display: grid; place-items: center; animation: fadeIn .25s; }
-.modal { width: min(84vw, 340px); text-align: center; padding: 26px 22px 22px; background: linear-gradient(180deg, #FFFEFE, #FFF3F9); }
+.modal { width: min(84cqw, 340px); text-align: center; padding: 26px 22px 22px; background: linear-gradient(180deg, #FFFEFE, #FFF3F9); }
 .modal-overlay .modal { animation: popIn .32s cubic-bezier(.4, 1.6, .5, 1); }
 .m-mascot { font-size: 58px; }
 .modal h2 { color: #EC4899; margin: 8px 0 4px; font-size: 24px; }
@@ -258,7 +256,7 @@ button:focus-visible { outline: 3px solid #F472B6; outline-offset: 2px; }
 
 /* ═══════════ v2.0.0.0 胖皮厨房:美术接入 ═══════════ */
 /* —— 主界面:整幅手绘图当背景 + 透明可点区域 —— */
-.home-art { position: relative; height: 100dvh; width: 100%;
+.home-art { position: relative; height: 100%; width: 100%;
   background: url('assets/bg/main.jpg') no-repeat center top / cover; }
 .art-btn { position: absolute; left: 50%; transform: translateX(-50%); width: 64%; height: 6.2%;
   background: transparent; border: none; cursor: pointer; border-radius: 30px; }
@@ -274,11 +272,11 @@ button:focus-visible { outline: 3px solid #F472B6; outline-offset: 2px; }
   filter: drop-shadow(0 1px 1px rgba(0,0,0,.12)); }
 
 /* —— 皮肤:对局背景(default 地狱后厨 = 暖厨房;其余各主题)—— */
-body.in-game.skin-kitchen { background: url('assets/bg/skin-kitchen.jpg') center top/cover no-repeat, #F3D39C; }
-body.in-game.skin-ranch   { background: url('assets/bg/skin-ranch.jpg')   center top/cover no-repeat, #8FCF62; }
-body.in-game.skin-bakery  { background: url('assets/bg/skin-bakery.jpg')  center top/cover no-repeat, #F7D0DF; }
-body.in-game.skin-sky     { background: url('assets/bg/skin-sky.jpg')     center top/cover no-repeat, #DCF1FF; }
-body.in-game.skin-forest  { background: url('assets/bg/skin-forest.jpg')  center top/cover no-repeat, #EAF3DD; }
+body.skin-kitchen .screen.play { background: url('assets/bg/skin-kitchen.jpg') center top/cover no-repeat, #F3D39C; }
+body.skin-ranch .screen.play   { background: url('assets/bg/skin-ranch.jpg')   center top/cover no-repeat, #8FCF62; }
+body.skin-bakery .screen.play  { background: url('assets/bg/skin-bakery.jpg')  center top/cover no-repeat, #F7D0DF; }
+body.skin-sky .screen.play     { background: url('assets/bg/skin-sky.jpg')     center top/cover no-repeat, #DCF1FF; }
+body.skin-forest .screen.play  { background: url('assets/bg/skin-forest.jpg')  center top/cover no-repeat, #EAF3DD; }
 
 /* —— 设置:皮肤 / 主题选择器 —— */
 .set-title { font-family: var(--font-fun); font-size: 15px; color: #3E3630; margin-bottom: 10px; }
@@ -379,10 +377,10 @@ body.in-game .screen.play { position: relative; }
 body.in-game .screen.play .topbar,
 body.in-game .screen.play .orderbar,
 body.in-game .screen.play .progress { position: absolute; left: 0; right: 0; z-index: 3; }
-body.in-game .screen.play .topbar { top: 6.4dvh; padding: 0 16px; }
-body.in-game .screen.play .orderbar { top: 12.6dvh; background: transparent; box-shadow: none; padding: 0 20px 0 52px; min-height: 5dvh; }
-body.in-game .screen.play .progress { top: 19dvh; left: 44px; right: 20px; background: rgba(255,255,255,.28); box-shadow: none; height: 2.4dvh; }
-body.in-game .screen.play .board-wrap { margin-top: 24dvh; }
+body.in-game .screen.play .topbar { top: 6.4cqh; padding: 0 16px; }
+body.in-game .screen.play .orderbar { top: 12.6cqh; background: transparent; box-shadow: none; padding: 0 20px 0 52px; min-height: 5cqh; }
+body.in-game .screen.play .progress { top: 19cqh; left: 44px; right: 20px; background: rgba(255,255,255,.28); box-shadow: none; height: 2.4cqh; }
+body.in-game .screen.play .board-wrap { margin-top: 24cqh; }
 /* 按钮/文字:透明底,坐在背景绘制的按钮/标题槽上 */
 body.in-game .screen.play .icon-btn { background: rgba(255,251,243,.94); box-shadow: 0 2px 0 rgba(200,150,100,.22); border-color: #fff; color: #C0567F; width: 42px; height: 42px; }
 body.in-game .screen.play .icon-btn:active { transform: translateY(1px); }
@@ -393,13 +391,13 @@ body.in-game .progress-time, body.in-game .progress-num { color: #9A5A34; }
 
 /* ═══════════ v2.0.0.1 分层封面 + 图标按钮 ═══════════ */
 /* —— 首页封面:背景图 + 独立标题 + 三个按钮(文字叠加)—— */
-.cover { position: relative; height: 100dvh; width: 100%;
+.cover { position: relative; height: 100%; width: 100%;
   background: url('assets/bg/home.jpg') center top/cover no-repeat; overflow: hidden; }
-.cover-title { position: absolute; top: 8dvh; left: 50%; width: 82%; max-width: 400px; height: auto; pointer-events: none;
+.cover-title { position: absolute; top: 8cqh; left: 50%; width: 82%; max-width: 400px; height: auto; pointer-events: none;
   filter: drop-shadow(0 4px 10px rgba(120, 80, 40, .22)); animation: titleBob 3s ease-in-out infinite; }
 @keyframes titleBob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-6px); } }
-.cover-opts { position: absolute; left: 0; right: 0; bottom: 2dvh; display: flex; flex-direction: column;
-  align-items: center; gap: 1.4dvh; }
+.cover-opts { position: absolute; left: 0; right: 0; bottom: 2cqh; display: flex; flex-direction: column;
+  align-items: center; gap: 1.4cqh; }
 .cover-opt { position: relative; width: 80%; max-width: 360px; background: none; border: none; padding: 0; cursor: pointer;
   filter: drop-shadow(0 3px 9px rgba(90, 60, 30, .18)); transition: transform .12s, filter .12s; }
 .cover-opt img { width: 100%; height: auto; display: block; pointer-events: none; }
@@ -407,7 +405,7 @@ body.in-game .progress-time, body.in-game .progress-num { color: #9A5A34; }
   text-align: center; font-family: var(--font-fun); font-size: 21px; color: #7A4A22;
   text-shadow: 0 1px 0 rgba(255, 250, 235, .6); pointer-events: none; }
 .cover-opt:active { transform: scale(.965); filter: drop-shadow(0 2px 6px rgba(90, 60, 30, .16)) brightness(.9); }
-.cover .art-ver { position: static; margin-top: .4dvh; color: #8a6a4a; opacity: .85; }
+.cover .art-ver { position: static; margin-top: .4cqh; color: #8a6a4a; opacity: .85; }
 
 /* —— 对局页:三个功能按钮改用图标 PNG(透明底,叠在无按钮背景的角上)—— */
 body.in-game .screen.play .icon-btn.ibtn-img { background: transparent; box-shadow: none; border: none;
@@ -425,39 +423,39 @@ body.in-game .screen.play .topbar #btn-book { position: absolute; right: 46px; t
 body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; top: 6px; width: 33px; height: 33px; }
 
 /*/* ═══════════ v2.0.0.4 选关页(用户新素材)═══════════ */
-.lvsel2 { position: relative; height: 100dvh; width: 100%; overflow: hidden;
+.lvsel2 { position: relative; height: 100%; width: 100%; overflow: hidden;
   background: url('assets/bg/levels.jpg') center top/cover no-repeat; padding: 0; }
-.lvsel2-title { position: absolute; top: 2.4dvh; left: 50%; transform: translateX(-50%);
+.lvsel2-title { position: absolute; top: 2.4cqh; left: 50%; transform: translateX(-50%);
   width: 52%; max-width: 260px; height: auto; z-index: 2; filter: drop-shadow(0 3px 6px rgba(120, 80, 40, .22)); }
-.lvsel2-back, .lvsel2-set { position: absolute; top: 3dvh; width: 46px; height: 46px; background: none; border: none;
+.lvsel2-back, .lvsel2-set { position: absolute; top: 3cqh; width: 46px; height: 46px; background: none; border: none;
   padding: 0; cursor: pointer; z-index: 3; filter: drop-shadow(0 2px 4px rgba(120, 80, 40, .2)); }
 .lvsel2-back { left: 14px; } .lvsel2-set { right: 14px; }
 .lvsel2-back img, .lvsel2-set img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .lvsel2-back:active, .lvsel2-set:active { transform: scale(.92); }
 /* 关卡栏列表 */
-.lvsel2-list { position: absolute; top: 13dvh; left: 0; right: 0; z-index: 1;
+.lvsel2-list { position: absolute; top: 13cqh; left: 0; right: 0; z-index: 1;
   display: flex; flex-direction: column; gap: 9px; align-items: center; padding: 0 14px; }
 .lc { position: relative; width: 100%; max-width: 430px; border: none; background: none; padding: 0; cursor: pointer;
   transition: transform .13s; filter: drop-shadow(0 3px 5px rgba(150, 110, 60, .18)); }
 .lc:active { transform: scale(.98); }
 .lc.locked { filter: grayscale(.55) opacity(.72); }
 .lc-bg { width: 100%; height: auto; display: block; }
-.lc-name { position: absolute; left: 27%; right: 40%; top: 17%; font-family: var(--font-fun); font-size: 4vw; color: #4A3B28; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lc-sub { position: absolute; left: 27%; right: 40%; top: 45%; font-size: 3vw; color: #8A7350; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lc-stat { position: absolute; left: 27%; right: 40%; top: 72%; font-size: 3vw; color: #AB9268; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lc-timer { position: absolute; left: 60%; top: 50%; transform: translateY(-50%); font-size: 5vw; opacity: .82; }
-.lc-rate { position: absolute; left: 69%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column;
+.lc-name { position: absolute; left: 26%; right: 33%; top: 17%; font-family: var(--font-fun); font-size: 3.7cqw; color: #4A3B28; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-sub { position: absolute; left: 26%; right: 33%; top: 45%; font-size: 2.9cqw; color: #8A7350; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-stat { position: absolute; left: 26%; right: 33%; top: 72%; font-size: 2.9cqw; color: #AB9268; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-timer { position: absolute; left: 63%; top: 50%; transform: translateY(-50%); font-size: 5cqw; opacity: .82; }
+.lc-rate { position: absolute; left: 71%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column;
   align-items: center; line-height: 1.1; border-radius: 12px; padding: 3px 10px; }
-.lc-rate i { font-style: normal; font-size: 2.5vw; }
-.lc-rate b { font-family: var(--font-fun); font-size: 4.2vw; }
+.lc-rate i { font-style: normal; font-size: 2.5cqw; }
+.lc-rate b { font-family: var(--font-fun); font-size: 4.2cqw; }
 .lc-rate.easy { background: rgba(214, 245, 198, .85); } .lc-rate.easy i, .lc-rate.easy b { color: #4E9A2E; }
 .lc-rate.mid { background: rgba(251, 230, 190, .85); } .lc-rate.mid i, .lc-rate.mid b { color: #C6821F; }
 .lc-rate.hard { background: rgba(251, 210, 216, .85); } .lc-rate.hard i, .lc-rate.hard b { color: #D8506A; }
 .lc-lock { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 30px; }
 /* 底部小河马招牌 + 页脚 */
-.lvsel2-hippo { position: absolute; right: -18px; bottom: 3.2dvh; width: 40%; max-width: 190px; height: auto; z-index: 1;
+.lvsel2-hippo { position: absolute; right: -18px; bottom: 3.2cqh; width: 40%; max-width: 190px; height: auto; z-index: 1;
   pointer-events: none; filter: drop-shadow(0 3px 5px rgba(150, 110, 60, .22)); }
-.lvsel2-foot { position: absolute; left: 0; right: 0; bottom: 1dvh; text-align: center; font-size: 10.5px;
+.lvsel2-foot { position: absolute; left: 0; right: 0; bottom: 1cqh; text-align: center; font-size: 10.5px;
   color: #8A6E48; z-index: 2; padding: 0 16px; }
 @media (min-width: 460px) {
   .lc-name { font-size: 20px; } .lc-sub, .lc-stat { font-size: 13px; }
@@ -465,13 +463,13 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
 }
 
 /* ═══════════ v2.0.0.6 设置页(用户框架素材)+ 教学页背景 ═══════════ */
-.set2 { position: relative; height: 100dvh; width: 100%; overflow-y: auto;
-  background: url('assets/bg/settings.jpg') center top/cover no-repeat; padding: 0 0 8dvh; }
-.set2-back { position: absolute; top: 3dvh; left: 14px; width: 46px; height: 46px; background: none; border: none;
+.set2 { position: relative; height: 100%; width: 100%; overflow-y: auto;
+  background: url('assets/bg/settings.jpg') center top/cover no-repeat; padding: 0 0 8cqh; }
+.set2-back { position: absolute; top: 3cqh; left: 14px; width: 46px; height: 46px; background: none; border: none;
   padding: 0; cursor: pointer; z-index: 3; filter: drop-shadow(0 2px 4px rgba(120, 80, 40, .2)); }
 .set2-back img { width: 100%; height: 100%; object-fit: contain; }
 .set2-back:active { transform: scale(.92); }
-.set2-title { display: block; margin: 2.4dvh auto 1.6dvh; width: 46%; max-width: 230px; height: auto;
+.set2-title { display: block; margin: 2.4cqh auto 1.6cqh; width: 46%; max-width: 230px; height: auto;
   filter: drop-shadow(0 3px 6px rgba(120, 80, 40, .22)); }
 /* 面板容器:框架图设尺寸,控件绝对叠加对齐图标 */
 .set2-p1, .set2-p2 { position: relative; width: 92%; max-width: 440px; margin: 0 auto 14px; }
@@ -479,7 +477,7 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
 /* 上栏:三行控件,对齐左侧绘制的 音效/音乐/语言 图标 */
 .s-row { position: absolute; left: 23%; right: 7%; display: flex; align-items: center; gap: 10px; }
 .s-sfx { top: 19%; } .s-bgm { top: 45%; } .s-lang { top: 70%; }
-.s-lbl { font-family: var(--font-fun); font-size: 4vw; color: #5A4632; white-space: nowrap; }
+.s-lbl { font-family: var(--font-fun); font-size: 4cqw; color: #5A4632; white-space: nowrap; }
 .s-row input[type="range"] { flex: 1; height: 10px; -webkit-appearance: none; appearance: none;
   background: linear-gradient(#F5D9A8, #F5D9A8) no-repeat, #EDE0C4; border-radius: 999px; }
 .s-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
@@ -487,16 +485,16 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
 .s-row input[type="range"] { accent-color: #F2A93C; }
 .s-lang .seg { display: flex; gap: 8px; margin-left: auto; }
 .s-lang .seg button { font-family: var(--font-fun); border: 2px solid #E7C98A; background: #FFFDF4; color: #8A6A3A;
-  border-radius: 12px; padding: 5px 12px; font-size: 3.4vw; cursor: pointer; }
+  border-radius: 12px; padding: 5px 12px; font-size: 3.4cqw; cursor: pointer; }
 .s-lang .seg button.on { background: linear-gradient(180deg, #FDD37A, #F2A93C); border-color: #E08E1E; color: #7A4A16; box-shadow: 0 2px 0 #D9891C; }
 /* 皮肤面板:标题 + 皮肤网格叠在框内 */
 .skin2-head { position: absolute; left: 22%; top: 8%; right: 6%; }
-.skin2-head b { font-family: var(--font-fun); font-size: 4.4vw; color: #5A4632; }
-.skin2-head small { font-size: 2.7vw; color: #A6906B; margin-left: 6px; }
+.skin2-head b { font-family: var(--font-fun); font-size: 4.4cqw; color: #5A4632; }
+.skin2-head small { font-size: 2.7cqw; color: #A6906B; margin-left: 6px; }
 .skin2-grid { position: absolute; left: 6%; right: 6%; top: 27%; bottom: 6%; display: grid;
   grid-template-columns: repeat(3, 1fr); gap: 3.5%; }
 .skin2-grid .pick { min-height: 0; border-radius: 12px; }
-.skin2-grid .pick-name { font-size: 3.1vw; }
+.skin2-grid .pick-name { font-size: 3.1cqw; }
 .set2-foot { text-align: center; font-size: 11px; color: #8A6E48; margin-top: 4px; }
 @media (min-width: 460px) {
   .s-lbl { font-size: 17px; } .s-lang .seg button { font-size: 14px; }
@@ -509,6 +507,6 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
   pointer-events: none; filter: drop-shadow(0 3px 5px rgba(150, 110, 60, .22)); }
 
 /* 皮肤卡:Coming Soon(暂锁的牧场/森林)文字更小以容纳 */
-.pick.soon .pick-name { font-size: 2.9vw; color: #9C948B; line-height: 1.2; }
-.skin2-grid .pick.soon .pick-name { font-size: 2.8vw; }
+.pick.soon .pick-name { font-size: 2.9cqw; color: #9C948B; line-height: 1.2; }
+.skin2-grid .pick.soon .pick-name { font-size: 2.8cqw; }
 @media (min-width: 460px) { .pick.soon .pick-name, .skin2-grid .pick.soon .pick-name { font-size: 12px; } }
