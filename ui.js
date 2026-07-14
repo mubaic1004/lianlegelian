@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.5'; // 选关栏紧凑排列 + 小河马右移
+const VERSION = 'v2.0.0.6'; // 选关栏紧凑排列 + 小河马右移
 const app = document.getElementById('app');
 
 const store = {
@@ -308,7 +308,7 @@ function showLevels() {
   }).join('');
   app.innerHTML = `
   <div class="screen lvsel2">
-    <img class="lvsel2-title" src="assets/ui/lvsel-title.png" alt="${T('选择关卡', 'Select Level')}">
+    <img class="lvsel2-title" src="assets/ui/${lang === 'zh' ? 'lvsel-title.png' : 'lvsel-title-en.png'}" alt="${T('选择关卡', 'Select Level')}">
     <button class="lvsel2-back" id="btn-back" aria-label="${T('返回', 'Back')}"><img src="assets/ui/lvsel-back.png" alt=""></button>
     <button class="lvsel2-set" id="btn-set" aria-label="${T('设置', 'Settings')}"><img src="assets/ui/icon-settings.png" alt=""></button>
     <div class="lvsel2-list">${cards}</div>
@@ -336,62 +336,47 @@ function showSettings() {
   document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
+  const titleImg = lang === 'zh' ? 'set-title-zh.png' : 'set-title-en.png';
   app.innerHTML = `
-  <div class="screen home menu">
-    <div class="topbar bare">
-      <button class="icon-btn" id="btn-back" aria-label="${T('返回', 'Back')}">${ICONS.back}</button>
-      <span class="lv-name">⚙️ ${T('设置', 'Settings')}</span>
-      <span class="icon-spacer"></span>
-    </div>
-    <div class="set-card clay">
-      <div class="set-row"><span class="set-ic">🔊</span><label for="sfx-vol">${T('音效', 'Sound FX')}</label>
+  <div class="screen set2">
+    <button class="set2-back" id="btn-back" aria-label="${T('返回', 'Back')}"><img src="assets/ui/lvsel-back.png" alt=""></button>
+    <img class="set2-title" src="assets/ui/${titleImg}" alt="${T('设置', 'Settings')}">
+    <div class="set2-p1">
+      <img class="set2-frame" src="assets/ui/set-panel1.png" alt="">
+      <div class="s-row s-sfx"><span class="s-lbl">${T('音效', 'Sound')}</span>
         <input type="range" id="sfx-vol" min="0" max="100" value="${Math.round(sfxVol * 100)}"></div>
-      <div class="set-row"><span class="set-ic">🎵</span><label for="bgm-vol">${T('音乐', 'Music')}</label>
+      <div class="s-row s-bgm"><span class="s-lbl">${T('音乐', 'Music')}</span>
         <input type="range" id="bgm-vol" min="0" max="100" value="${Math.round(bgmVol * 100)}"></div>
-      <div class="set-row"><span class="set-ic">🌐</span><label>${T('语言', 'Language')}</label>
+      <div class="s-row s-lang"><span class="s-lbl">${T('语言', 'Lang')}</span>
         <span class="seg">
           <button class="${lang === 'zh' ? 'on' : ''}" data-lang="zh">中文</button>
           <button class="${lang === 'en' ? 'on' : ''}" data-lang="en">English</button>
         </span></div>
     </div>
-    <div class="set-card clay">
-      <div class="set-title">🎨 ${T('游戏皮肤', 'Game Skin')} <small>${T('第 5 关每通关 10 次解锁一款', 'One unlock per 10 clears of Lv5')}</small></div>
-      <div class="pick-grid">${SKINS.map(s => {
+    <div class="set2-p2">
+      <img class="set2-frame" src="assets/ui/set-panel2.png" alt="">
+      <div class="skin2-head"><b>${T('游戏皮肤', 'Game Skin')}</b><small>${T('第 5 关每通关 10 次解锁一款', 'One unlock / 10 Lv5 clears')}</small></div>
+      <div class="skin2-grid">${SKINS.map(s => {
         const ok = skinUnlocked(s);
         return `<button class="pick skin-${s.id} ${currentSkin === s.id ? 'on' : ''} ${ok ? '' : 'locked'}" data-skin="${s.id}">
-          <span class="pick-name">${ok ? T(s.name, s.en) : '🔒'}</span>
-          ${ok ? '' : `<span class="pick-need">${s.need}${T('次', '×')}</span>`}</button>`;
+          <span class="pick-name">${ok ? T(s.name, s.en) : '🔒'}</span>${ok ? '' : `<span class="pick-need">${s.need}${T('次', '×')}</span>`}</button>`;
       }).join('')}</div>
     </div>
-
-    <p class="foot credits">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}<br>
-      <small>${T('用 ❤️ 和 🍚 制作', 'Made with ❤️ and 🍚')}</small></p>
+    <p class="set2-foot">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
   </div>`;
   app.querySelector('#btn-back').addEventListener('click', () => { sfx.select(); showHome(); });
-  app.querySelector('#sfx-vol').addEventListener('input', e => {
-    sfxVol = +e.target.value / 100;
-    store.set('sfxVol', sfxVol);
-  });
+  app.querySelector('#sfx-vol').addEventListener('input', e => { sfxVol = +e.target.value / 100; store.set('sfxVol', sfxVol); });
   app.querySelector('#sfx-vol').addEventListener('change', () => sfx.pair());
-  app.querySelector('#bgm-vol').addEventListener('input', e => {
-    bgmVol = +e.target.value / 100;
-    store.set('bgmVol', bgmVol);
-    applyBgmVol();
-  });
+  app.querySelector('#bgm-vol').addEventListener('input', e => { bgmVol = +e.target.value / 100; store.set('bgmVol', bgmVol); applyBgmVol(); });
   app.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
     if (lang === b.dataset.lang) return;
-    lang = b.dataset.lang;
-    store.set('lang', lang);
-    sfx.select();
-    showSettings();
+    lang = b.dataset.lang; store.set('lang', lang); sfx.select(); showSettings();
   }));
   app.querySelectorAll('.pick[data-skin]').forEach(b => b.addEventListener('click', () => {
     const s = SKINS.find(x => x.id === b.dataset.skin);
     if (!skinUnlocked(s)) { b.classList.add('wobble'); setTimeout(() => b.classList.remove('wobble'), 450); sfx.deny(); return; }
-    currentSkin = s.id; store.set('skin', s.id);
-    sfx.pair(); playBGM(); showSettings();
+    currentSkin = s.id; store.set('skin', s.id); sfx.pair(); playBGM(); showSettings();
   }));
-
 }
 
 // ———————————— 玩法教学(step by step 聚光灯引导) ————————————
@@ -432,6 +417,7 @@ function showInstructions() {
   app.innerHTML = `
   <div class="screen tut">
     <div class="tut-stage"></div>
+    <img class="tut-signboard" src="assets/ui/lvsel-hippo.png" alt="">
     <button class="g-skip">${T('跳过', 'Skip')}</button>
     <div class="g-nav">
       <button class="g-btn" id="g-prev">←</button>
@@ -459,7 +445,6 @@ function guideStep(i) {
       <h3 class="tut-title">${p.title}</h3>
       <div class="tut-art">${p.art}</div>
       <p class="tut-text">${p.text}</p>
-      <img class="tut-hippo" src="${hippoSrc(p.hippo)}" alt="">
     </div>`;
   app.querySelectorAll('.g-dots i').forEach((d, di) => d.classList.toggle('on', di === i));
   app.querySelector('#g-prev').disabled = i === 0;

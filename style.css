@@ -442,9 +442,9 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
 .lc:active { transform: scale(.98); }
 .lc.locked { filter: grayscale(.55) opacity(.72); }
 .lc-bg { width: 100%; height: auto; display: block; }
-.lc-name { position: absolute; left: 27%; top: 17%; font-family: var(--font-fun); font-size: 4vw; color: #4A3B28; white-space: nowrap; }
-.lc-sub { position: absolute; left: 27%; top: 45%; font-size: 3vw; color: #8A7350; white-space: nowrap; }
-.lc-stat { position: absolute; left: 27%; top: 72%; font-size: 3vw; color: #AB9268; white-space: nowrap; }
+.lc-name { position: absolute; left: 27%; right: 40%; top: 17%; font-family: var(--font-fun); font-size: 4vw; color: #4A3B28; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-sub { position: absolute; left: 27%; right: 40%; top: 45%; font-size: 3vw; color: #8A7350; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lc-stat { position: absolute; left: 27%; right: 40%; top: 72%; font-size: 3vw; color: #AB9268; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lc-timer { position: absolute; left: 60%; top: 50%; transform: translateY(-50%); font-size: 5vw; opacity: .82; }
 .lc-rate { position: absolute; left: 69%; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column;
   align-items: center; line-height: 1.1; border-radius: 12px; padding: 3px 10px; }
@@ -463,3 +463,47 @@ body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; t
   .lc-name { font-size: 20px; } .lc-sub, .lc-stat { font-size: 13px; }
   .lc-timer { font-size: 24px; } .lc-rate i { font-size: 11px; } .lc-rate b { font-size: 20px; }
 }
+
+/* ═══════════ v2.0.0.6 设置页(用户框架素材)+ 教学页背景 ═══════════ */
+.set2 { position: relative; height: 100dvh; width: 100%; overflow-y: auto;
+  background: url('assets/bg/settings.jpg') center top/cover no-repeat; padding: 0 0 8dvh; }
+.set2-back { position: absolute; top: 3dvh; left: 14px; width: 46px; height: 46px; background: none; border: none;
+  padding: 0; cursor: pointer; z-index: 3; filter: drop-shadow(0 2px 4px rgba(120, 80, 40, .2)); }
+.set2-back img { width: 100%; height: 100%; object-fit: contain; }
+.set2-back:active { transform: scale(.92); }
+.set2-title { display: block; margin: 2.4dvh auto 1.6dvh; width: 46%; max-width: 230px; height: auto;
+  filter: drop-shadow(0 3px 6px rgba(120, 80, 40, .22)); }
+/* 面板容器:框架图设尺寸,控件绝对叠加对齐图标 */
+.set2-p1, .set2-p2 { position: relative; width: 92%; max-width: 440px; margin: 0 auto 14px; }
+.set2-frame { width: 100%; height: auto; display: block; }
+/* 上栏:三行控件,对齐左侧绘制的 音效/音乐/语言 图标 */
+.s-row { position: absolute; left: 23%; right: 7%; display: flex; align-items: center; gap: 10px; }
+.s-sfx { top: 19%; } .s-bgm { top: 45%; } .s-lang { top: 70%; }
+.s-lbl { font-family: var(--font-fun); font-size: 4vw; color: #5A4632; white-space: nowrap; }
+.s-row input[type="range"] { flex: 1; height: 10px; -webkit-appearance: none; appearance: none;
+  background: linear-gradient(#F5D9A8, #F5D9A8) no-repeat, #EDE0C4; border-radius: 999px; }
+.s-row input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%;
+  background: #fff; border: 3px solid #F2A93C; box-shadow: 0 2px 3px rgba(150, 100, 40, .3); cursor: pointer; }
+.s-row input[type="range"] { accent-color: #F2A93C; }
+.s-lang .seg { display: flex; gap: 8px; margin-left: auto; }
+.s-lang .seg button { font-family: var(--font-fun); border: 2px solid #E7C98A; background: #FFFDF4; color: #8A6A3A;
+  border-radius: 12px; padding: 5px 12px; font-size: 3.4vw; cursor: pointer; }
+.s-lang .seg button.on { background: linear-gradient(180deg, #FDD37A, #F2A93C); border-color: #E08E1E; color: #7A4A16; box-shadow: 0 2px 0 #D9891C; }
+/* 皮肤面板:标题 + 皮肤网格叠在框内 */
+.skin2-head { position: absolute; left: 22%; top: 8%; right: 6%; }
+.skin2-head b { font-family: var(--font-fun); font-size: 4.4vw; color: #5A4632; }
+.skin2-head small { font-size: 2.7vw; color: #A6906B; margin-left: 6px; }
+.skin2-grid { position: absolute; left: 6%; right: 6%; top: 27%; bottom: 6%; display: grid;
+  grid-template-columns: repeat(3, 1fr); gap: 3.5%; }
+.skin2-grid .pick { min-height: 0; border-radius: 12px; }
+.skin2-grid .pick-name { font-size: 3.1vw; }
+.set2-foot { text-align: center; font-size: 11px; color: #8A6E48; margin-top: 4px; }
+@media (min-width: 460px) {
+  .s-lbl { font-size: 17px; } .s-lang .seg button { font-size: 14px; }
+  .skin2-head b { font-size: 19px; } .skin2-head small { font-size: 11px; } .skin2-grid .pick-name { font-size: 13px; }
+}
+
+/* 教学页:背景换成设置背景 + 右下角招牌小河马 */
+.tut { background: url('assets/bg/settings.jpg') center top/cover no-repeat !important; }
+.tut-signboard { position: absolute; right: -14px; bottom: 8dvh; width: 40%; max-width: 180px; height: auto; z-index: 0;
+  pointer-events: none; filter: drop-shadow(0 3px 5px rgba(150, 110, 60, .22)); }
