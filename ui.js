@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.0'; // 大改动:改名胖皮厨房 + 美术接入,主位 +1
+const VERSION = 'v2.0.0.1'; // 分层封面 + 关卡图标按钮
 const app = document.getElementById('app');
 
 const store = {
@@ -263,15 +263,19 @@ function showHome() {
   document.body.classList.remove('in-game');
   game = null;
   window.__game = null;
+  const titleImg = lang === 'zh' ? 'title-zh.png' : 'title-en.png';
   app.innerHTML = `
-  <div class="screen home-art">
-    <button class="art-btn" data-go="play" aria-label="${T('开始做菜', 'Play')}"></button>
-    <button class="art-btn" data-go="guide" aria-label="${T('玩法教学', 'How to Play')}"></button>
-    <button class="art-btn" data-go="settings" aria-label="${T('设置', 'Settings')}"></button>
-    <p class="art-ver">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
+  <div class="screen cover">
+    <img class="cover-title" src="assets/ui/${titleImg}" alt="${T('胖皮厨房', 'Pangpi Kitchen')}">
+    <div class="cover-opts">
+      <button class="cover-opt" data-go="play"><img src="assets/ui/btn-play.png" alt=""><span>${T('开始做菜', 'Play')}</span></button>
+      <button class="cover-opt" data-go="guide"><img src="assets/ui/btn-guide.png" alt=""><span>${T('玩法教学', 'How to Play')}</span></button>
+      <button class="cover-opt" data-go="settings"><img src="assets/ui/btn-settings.png" alt=""><span>${T('设置', 'Settings')}</span></button>
+      <p class="art-ver">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
+    </div>
   </div>`;
-  app.querySelectorAll('.art-btn').forEach(b => b.addEventListener('click', () => {
-    sfx.select();
+  app.querySelectorAll('.cover-opt').forEach(b => b.addEventListener('click', () => {
+    sfx.select(); // 轻轻的“嘟”
     const go = b.dataset.go;
     if (go === 'play') showLevels();
     else if (go === 'guide') showInstructions();
@@ -502,10 +506,10 @@ function renderPlay() {
   app.innerHTML = `
   <div class="screen play">
     <div class="topbar">
-      <button class="icon-btn" id="btn-back" aria-label="${T('返回', 'Back')}">${ICONS.back}</button>
+      <button class="icon-btn ibtn-img" id="btn-back" aria-label="${T('返回', 'Back')}"><img src="assets/ui/icon-back.png" alt=""></button>
       <span class="lv-name">${lvname(levelId)}</span>
-      <button class="icon-btn" id="btn-book" aria-label="${T('查看菜谱', 'Recipes')}">${ICONS.book}</button>
-      <button class="icon-btn" id="btn-mute" aria-label="${T('声音开关', 'Toggle sound')}">${muted ? ICONS.mutedIcon : ICONS.sound}</button>
+      <button class="icon-btn ibtn-img" id="btn-book" aria-label="${T('查看菜谱', 'Recipes')}"><img src="assets/ui/icon-menu.png" alt=""></button>
+      <button class="icon-btn ibtn-img ${muted ? 'muted' : ''}" id="btn-mute" aria-label="${T('声音开关', 'Toggle sound')}"><img src="assets/ui/icon-sound.png" alt=""></button>
     </div>
     <div class="orderbar"><span class="ob-label">📋 ${T('点单', 'Orders')}</span><div class="ob-list"></div><span class="ob-dishes"></span></div>
     <div class="progress"><div class="progress-fill"></div><span class="progress-time">⏱</span><span class="progress-num"></span></div>
@@ -531,8 +535,9 @@ function renderPlay() {
     muted = !muted;
     store.set('muted', muted);
     applyBgmVol();
-    e.currentTarget.innerHTML = muted ? ICONS.mutedIcon : ICONS.sound;
-    if (!muted) sfx.select();
+    if (muted) playBGM(); // 保持曲目引用
+    e.currentTarget.classList.toggle('muted', muted);
+    if (!muted) { sfx.select(); playBGM(); }
   });
   app.querySelectorAll('.tool').forEach(b => b.addEventListener('click', () => useTool(b.dataset.tool)));
   layoutBoard();
