@@ -395,18 +395,18 @@ body.in-game .progress-time, body.in-game .progress-num { color: #9A5A34; }
 /* —— 首页封面:背景图 + 独立标题 + 三个按钮(文字叠加)—— */
 .cover { position: relative; height: 100dvh; width: 100%;
   background: url('assets/bg/home.jpg') center top/cover no-repeat; overflow: hidden; }
-.cover-title { position: absolute; top: 3dvh; left: 50%; width: 82%; max-width: 400px; height: auto; pointer-events: none;
-  filter: drop-shadow(0 5px 4px rgba(120, 80, 40, .28)); animation: titleBob 3s ease-in-out infinite; }
+.cover-title { position: absolute; top: 13dvh; left: 50%; width: 82%; max-width: 400px; height: auto; pointer-events: none;
+  filter: drop-shadow(0 4px 10px rgba(120, 80, 40, .22)); animation: titleBob 3s ease-in-out infinite; }
 @keyframes titleBob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-6px); } }
 .cover-opts { position: absolute; left: 0; right: 0; bottom: 2dvh; display: flex; flex-direction: column;
   align-items: center; gap: 1.4dvh; }
 .cover-opt { position: relative; width: 80%; max-width: 360px; background: none; border: none; padding: 0; cursor: pointer;
-  filter: drop-shadow(0 4px 3px rgba(90, 60, 30, .26)); transition: transform .12s, filter .12s; }
+  filter: drop-shadow(0 3px 9px rgba(90, 60, 30, .18)); transition: transform .12s, filter .12s; }
 .cover-opt img { width: 100%; height: auto; display: block; pointer-events: none; }
 .cover-opt span { position: absolute; top: 50%; left: 27%; right: 7%; transform: translateY(-50%);
   text-align: center; font-family: var(--font-fun); font-size: 21px; color: #7A4A22;
   text-shadow: 0 1px 0 rgba(255, 250, 235, .6); pointer-events: none; }
-.cover-opt:active { transform: scale(.965); filter: drop-shadow(0 2px 2px rgba(90, 60, 30, .26)) brightness(.9); }
+.cover-opt:active { transform: scale(.965); filter: drop-shadow(0 2px 6px rgba(90, 60, 30, .16)) brightness(.9); }
 .cover .art-ver { position: static; margin-top: .4dvh; color: #8a6a4a; opacity: .85; }
 
 /* —— 对局页:三个功能按钮改用图标 PNG(透明底,叠在无按钮背景的角上)—— */
@@ -415,3 +415,11 @@ body.in-game .screen.play .icon-btn.ibtn-img { background: transparent; box-shad
 body.in-game .screen.play .icon-btn.ibtn-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
 body.in-game .screen.play .icon-btn.ibtn-img:active { transform: scale(.92); }
 body.in-game .screen.play .icon-btn.ibtn-img.muted { filter: grayscale(.7) opacity(.5); }
+
+
+/* v2.0.0.2:对局顶栏重排 —— 标题居中,菜单/音量键缩至 3/4 并右推 */
+body.in-game .screen.play .topbar { padding: 0; height: 44px; display: block; }
+body.in-game .screen.play .topbar #btn-back { position: absolute; left: 14px; top: 0; }
+body.in-game .screen.play .topbar .lv-name { position: absolute; left: 52px; right: 52px; top: 0; height: 44px; line-height: 44px; text-align: center; }
+body.in-game .screen.play .topbar #btn-book { position: absolute; right: 46px; top: 6px; width: 33px; height: 33px; }
+body.in-game .screen.play .topbar #btn-mute { position: absolute; right: 12px; top: 6px; width: 33px; height: 33px; }
