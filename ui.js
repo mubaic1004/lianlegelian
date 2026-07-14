@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.4'; // BGM 加载即播 + 选关页新素材
+const VERSION = 'v2.0.0.5'; // 选关栏紧凑排列 + 小河马右移
 const app = document.getElementById('app');
 
 const store = {
