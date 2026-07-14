@@ -1,7 +1,7 @@
 // 「胖皮厨房」界面层:页面(首页/选关/教学/设置)+ 渲染 + 交互 + 动效 + 音效 + BGM + 中英双语
 import { buildLevel, LEVELS, INGREDIENTS, RECIPES, mulberry32 } from './engine.js';
 
-const VERSION = 'v2.0.0.7'; // 选关栏紧凑排列 + 小河马右移
+const VERSION = 'v2.0.0.8'; // 选关栏紧凑排列 + 小河马右移
 const app = document.getElementById('app');
 
 const store = {
@@ -20,10 +20,10 @@ const toolName = k => T({ undo: '撤回', shuffle: '洗牌', pop: '弹出' }[k],
 // ———————————— 皮肤 / 卡牌主题(第 5 关通关解锁)————————————
 const SKINS = [
   { id: 'kitchen', name: '地狱后厨', en: "Hell's Kitchen", need: 0 },
-  { id: 'ranch', name: '牧场时光', en: 'Ranch Time', need: 10 },
+  { id: 'ranch', name: '牧场时光', en: 'Ranch Time', need: 10, soon: true },
   { id: 'bakery', name: '甜蜜烘焙坊', en: 'Sweet Bakery', need: 20 },
   { id: 'sky', name: '云端小岛', en: 'Sky Isle', need: 30 },
-  { id: 'forest', name: '森林小屋', en: 'Forest Cabin', need: 40 },
+  { id: 'forest', name: '森林小屋', en: 'Forest Cabin', need: 40, soon: true },
 ];
 const THEMES = [
   { id: 'emoji', name: 'Emoji', en: 'Emoji', need: 0 },
@@ -35,7 +35,9 @@ const THEMES = [
 let currentSkin = store.get('skin', 'kitchen');
 let currentTheme = store.get('theme', 'emoji');
 const godClears = () => store.get('god', 0);
-const skinUnlocked = s => true; // ⚠️临时全解锁(检查页面用),恢复为: godClears() >= s.need
+const skinUnlocked = s => !s.soon && godClears() >= s.need; // soon 皮肤(牧场/森林)暂时锁定,任何手段不可解锁
+// 保护:若存档里的当前皮肤已被锁(例如临时检查后选到 soon 皮肤),回退默认
+(() => { const cs = SKINS.find(s => s.id === currentSkin); if (cs && !skinUnlocked(cs)) { currentSkin = 'kitchen'; store.set('skin', 'kitchen'); } })();
 // 卡牌主题为随机掉落解锁:记录已解锁 id 列表
 function unlockedThemes() { return new Set(['emoji', ...store.get('themesUnlocked', [])]); }
 function hippoSrc(n) { return `assets/hippos/h${String(n).padStart(2, '0')}.png`; }
@@ -358,8 +360,10 @@ function showSettings() {
       <div class="skin2-head"><b>${T('游戏皮肤', 'Game Skin')}</b><small>${T('第 5 关每通关 10 次解锁一款', 'One unlock / 10 Lv5 clears')}</small></div>
       <div class="skin2-grid">${SKINS.map(s => {
         const ok = skinUnlocked(s);
-        return `<button class="pick skin-${s.id} ${currentSkin === s.id ? 'on' : ''} ${ok ? '' : 'locked'}" data-skin="${s.id}">
-          <span class="pick-name">${ok ? T(s.name, s.en) : '🔒'}</span>${ok ? '' : `<span class="pick-need">${s.need}${T('次', '×')}</span>`}</button>`;
+        const label = ok ? T(s.name, s.en) : (s.soon ? T('敬请期待', 'Coming Soon') : '🔒');
+        const need = (!ok && !s.soon) ? `<span class="pick-need">${s.need}${T('次', '×')}</span>` : '';
+        return `<button class="pick skin-${s.id} ${currentSkin === s.id ? 'on' : ''} ${ok ? '' : 'locked'} ${s.soon ? 'soon' : ''}" data-skin="${s.id}">
+          <span class="pick-name">${label}</span>${need}</button>`;
       }).join('')}</div>
     </div>
     <p class="set2-foot">🍉 ${T('瓜皮工作室', 'GuaPi Studio')} · ${VERSION}</p>
@@ -816,7 +820,7 @@ function checkEnd() {
       const g = store.get('god', 0) + 1;
       store.set('god', g);
       // 皮肤:每 10 次通关按顺序解锁下一款(need 恰为 10/20/30/40)
-      const justSkin = SKINS.find(s => s.need === g);
+      const justSkin = SKINS.find(s => s.need === g && !s.soon);
       window.__justUnlock = { skin: justSkin, theme: null };
     }
     setTimeout(() => { sfx.win(); confetti(); showModal(true); }, 350);
